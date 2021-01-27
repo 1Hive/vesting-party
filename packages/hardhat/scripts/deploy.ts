@@ -1,18 +1,14 @@
 /* eslint no-use-before-define: "warn" */
-const fs = require("fs");
-const chalk = require("chalk");
-const { config, ethers } = require("hardhat");
-const { utils } = require("ethers");
-const R = require("ramda");
+import fs from "fs";
+import chalk from "chalk";
+import { config, ethers } from "hardhat";
+import { utils } from "ethers";
+import * as R from "ramda";
 
 const main = async () => {
-
   console.log("\n\n 📡 Deploying...\n");
 
-
-  const yourContract = await deploy("YourContract") // <-- add in constructor args like line 16 vvvv
-
-
+  const yourContract = await deploy("YourContract"); // <-- add in constructor args like line 16 vvvv
 
   // const exampleToken = await deploy("ExampleToken")
   // const examplePriceOracle = await deploy("ExamplePriceOracle")
@@ -27,7 +23,6 @@ const main = async () => {
   });
   */
 
-
   /*
 
   //If you want to send value to an address from the deployer
@@ -38,7 +33,6 @@ const main = async () => {
     value: ethers.utils.parseEther("0.001")
   })
   */
-
 
   console.log(
     " 💾  Artifacts (address, abi, and args) saved to: ",
@@ -60,7 +54,7 @@ const deploy = async (contractName, _args = [], overrides = {}) => {
     " 📄",
     chalk.cyan(contractName),
     "deployed to:",
-    chalk.magenta(deployed.address),
+    chalk.magenta(deployed.address)
   );
 
   if (!encoded || encoded.length <= 2) return deployed;
@@ -92,14 +86,16 @@ const abiEncodeArgs = (deployed, contractArgs) => {
 
 // checks if it is a Solidity file
 const isSolidity = (fileName) =>
-  fileName.indexOf(".sol") >= 0 && fileName.indexOf(".swp") < 0 && fileName.indexOf(".swap") < 0;
+  fileName.indexOf(".sol") >= 0 &&
+  fileName.indexOf(".swp") < 0 &&
+  fileName.indexOf(".swap") < 0;
 
 const readArgsFile = (contractName) => {
   let args = [];
   try {
     const argsFile = `./contracts/${contractName}.args`;
     if (!fs.existsSync(argsFile)) return args;
-    args = JSON.parse(fs.readFileSync(argsFile));
+    args = JSON.parse(fs.readFileSync(argsFile).toString());
   } catch (e) {
     console.log(e);
   }
