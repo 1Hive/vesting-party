@@ -3,7 +3,7 @@ import fs from "fs";
 import chalk from "chalk";
 import { config, ethers } from "hardhat";
 import { utils } from "ethers";
-import * as R from "ramda";
+import R from "ramda";
 
 const main = async () => {
   console.log("\n\n 📡 Deploying...\n");
