@@ -20,7 +20,7 @@ contract Offer is ERC721 {
     uint16 public immutable override vestingDurationInDay;
     uint16 public immutable override vestingCliffInDays;
 
-    uint64 public constant PCT_BASE = 10 ** 18; // 0% = 0; 1% = 10^16; 100% = 10^18
+    uint64 public constant PCT_BASE = 10**18; // 0% = 0; 1% = 10^16; 100% = 10^18
 
     event ClaimedOffer(uint256 tokenId, address account, uint256 amount);
 

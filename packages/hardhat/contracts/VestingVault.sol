@@ -22,7 +22,13 @@ contract VestingVault is Ownable {
         uint256 totalClaimed;
     }
 
-    event GrantAdded(address indexed recipient, uint256 startTime, uint256 amount, uint16 vestingDuration, uint16 vestingCliff);
+    event GrantAdded(
+        address indexed recipient,
+        uint256 startTime,
+        uint256 amount,
+        uint16 vestingDuration,
+        uint16 vestingCliff
+    );
     event GrantTokensClaimed(address indexed recipient, uint256 amountClaimed);
     event GrantTransfered(address indexed recipient);
     // event GrantRevoked(
@@ -51,11 +57,11 @@ contract VestingVault is Ownable {
     /// @param _vestingCliffInDays Number of days of the grant's vesting cliff
     function addTokenGrant(
         uint256 _tokenId,
-        address _recipient
+        address _recipient,
         uint256 _startTime,
         uint256 _amount,
         uint16 _vestingDurationInDays,
-        uint16 _vestingCliffInDays,
+        uint16 _vestingCliffInDays
     ) external onlyOwner {
         require(
             tokenGrants[_tokenId].amount == 0,
@@ -85,7 +91,13 @@ contract VestingVault is Ownable {
             });
 
         tokenGrants[_tokenId] = grant;
-        emit GrantAdded(_recipient, grant.startTime, grant.amount, grant.vestingDuration, grant.vestingCliff);
+        emit GrantAdded(
+            _recipient,
+            grant.startTime,
+            grant.amount,
+            grant.vestingDuration,
+            grant.vestingCliff
+        );
     }
 
     function claimVestedTokens(uint256 _tokenId) external onlyOwner {
