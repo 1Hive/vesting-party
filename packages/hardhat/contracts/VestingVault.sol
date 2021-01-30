@@ -1,8 +1,9 @@
+// SPDX-License-Identifier: UNLICENSED
 /*
-Original work taken from https://gist.github.com/rstormsf/7cfb0c6b7a835c0c67b4a394b4fd9383
-Has been amended to use openzepplin Ownable and now only supports one grant per address for simplicity.
+Original work taken from https://github.com/JoinColony/colonyToken/blob/master/contracts/Vesting.sol and https://github.com/tapmydata/tap-protocol/blob/main/contracts/VestingVault.sol
+Has been amended to use with erc721 tokenIds. Allows several grants per address.
 */
-pragma solidity ^0.6.0;
+pragma solidity >=0.6.0 <0.7.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
@@ -68,7 +69,7 @@ contract VestingVault is Ownable {
             "Grant already exists, must revoke first."
         );
         require(
-            _vestingDuration > _vestingCliff,
+            _vestingDurationInDays > _vestingCliffInDays,
             "Token cliff longer than duration."
         );
 
@@ -100,7 +101,7 @@ contract VestingVault is Ownable {
         );
     }
 
-    function claimVestedTokens(uint256 _tokenId) external onlyOwner {
+    function claimVestedTokens(uint256 _tokenId) public onlyOwner {
         uint16 daysVested;
         uint256 amountVested;
         (daysVested, amountVested) = calculateGrantClaim(_tokenId);

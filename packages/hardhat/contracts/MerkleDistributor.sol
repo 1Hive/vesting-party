@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.6.11;
+pragma solidity >=0.6.0 <0.7.0;
 
 import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
 import "./interfaces/IMerkleDistributor.sol";
@@ -37,7 +37,7 @@ contract MerkleDistributor is IMerkleDistributor {
         address account,
         uint256 amount,
         bytes32[] calldata merkleProof
-    ) public virtual override {
+    ) external override {
         require(!isClaimed(index), "MerkleDistributor: Drop already claimed.");
 
         // Verify the merkle proof.
