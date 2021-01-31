@@ -9,6 +9,8 @@ packages/hardhat/artifacts
 packages/hardhat/typechain
 packages/react-app/src/contracts
 packages/hardhat/cache
+packages/hardhat/coverage/
+packages/hardhat/coverage.json
 
 docker/**/data
 
