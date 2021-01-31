@@ -6,6 +6,7 @@ import { task, HardhatUserConfig } from "hardhat/config";
 
 import "@nomiclabs/hardhat-waffle";
 import "hardhat-typechain";
+import "solidity-coverage";
 import { HttpNetworkUserConfig } from "hardhat/types";
 
 const { isAddress, getAddress, formatUnits, parseUnits } = utils;
@@ -52,6 +53,10 @@ const config: HardhatUserConfig = {
         notice no mnemonic here? it will just use account 0 of the hardhat node to deploy
         (you can put in a mnemonic here to set the deployer locally)
       */
+    },
+    coverage: {
+      url: "http://localhost:8555",
+      allowUnlimitedContractSize: true,
     },
     rinkeby: {
       url: "https://rinkeby.infura.io/v3/460f40a260564ac4a4f4b3fffb032dad", //<---- YOUR INFURA ID! (or it won't work)
