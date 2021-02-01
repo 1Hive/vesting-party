@@ -7,16 +7,15 @@ pragma solidity >=0.6.0 <0.7.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 
-// import "hardhat/console.sol";
+import "hardhat/console.sol";
 
-contract VestingVault is Ownable {
+contract VestingVault {
     using SafeMath for uint256;
     using SafeMath for uint16;
 
     uint256 internal constant ONE_MONTH = 2628000;
-    uint256[3] internal periods = [1 days, 1 weeks, ONE_MONTH];
+    uint256[3] internal periodUnits = [1 days, 1 weeks, ONE_MONTH];
 
     uint256 public vestingPeriod;
     uint16 public vestingDuration;
@@ -24,7 +23,7 @@ contract VestingVault is Ownable {
 
     ERC20 public token;
 
-    struct Grant {
+    struct Vesting {
         address recipient;
         uint256 amount;
         uint256 startTime;
@@ -32,59 +31,105 @@ contract VestingVault is Ownable {
         uint256 totalClaimed;
     }
 
-    event GrantAdded(
+    event VestingAdded(
         uint256 indexed tokenId,
         address indexed recipient,
         uint256 amount
     );
-    event GrantTokensClaimed(address indexed recipient, uint256 amountClaimed);
-    event GrantTransfered(address indexed recipient);
-    event GrantRevoked(
+    event VestingRevoked(
         uint256 indexed tokenId,
         address indexed recipient,
-        uint256 amountVested,
-        uint256 amountNotVested
+        uint256 amountVested
     );
+    event VestingTokensClaimed(
+        address indexed recipient,
+        uint256 amountClaimed
+    );
+    event VestingRecipientTransfered(address indexed recipient);
 
-    // unique erc721 token id to token grants relation
-    mapping(uint256 => Grant) private tokenGrants;
+    // unique erc721 token id to token vesting relation
+    mapping(uint256 => Vesting) private tokenVestings;
 
-    /// @param _vestingPeriod The choosed period of time (1 days(0), 1 weeks(1), 1 months(2))
+    /// @param _vestingPeriodUnit The choosed period of time (1 days(0), 1 weeks(1), 1 months(2))
     /// @param _vestingDurationInPeriods Number of periods of the grant's duration
     /// @param _vestingCliffInPeriods Number of periods of the grant's vesting cliff
     constructor(
-        ERC20 _token,
-        uint8 _vestingPeriod,
+        address _token,
+        uint8 _vestingPeriodUnit,
         uint16 _vestingDurationInPeriods,
         uint16 _vestingCliffInPeriods
     ) public {
         require(address(_token) != address(0));
-        token = _token;
+        require(_vestingDurationInPeriods > _vestingCliffInPeriods);
 
-        vestingPeriod = periods[_vestingPeriod];
+        token = ERC20(_token);
+
+        vestingPeriod = periodUnits[_vestingPeriodUnit];
         vestingDuration = _vestingDurationInPeriods;
         vestingCliff = _vestingCliffInPeriods;
     }
 
+    function claimVestedTokens(uint256 _tokenId) public {
+        uint16 periodsVested;
+        uint256 amountVested;
+        (periodsVested, amountVested) = calculateVestingClaim(_tokenId);
+        require(amountVested > 0, "Vested is 0");
+
+        Vesting storage tokenVesting = tokenVestings[_tokenId];
+
+        tokenVesting.periodsClaimed = uint16(
+            tokenVesting.periodsClaimed.add(periodsVested)
+        );
+        tokenVesting.totalClaimed = uint256(
+            tokenVesting.totalClaimed.add(amountVested)
+        );
+
+        require(
+            token.transfer(tokenVesting.recipient, amountVested),
+            "no tokens"
+        );
+        emit VestingTokensClaimed(tokenVesting.recipient, amountVested);
+    }
+
+    function getVestingStartTime(uint256 _tokenId)
+        public
+        view
+        returns (uint256)
+    {
+        Vesting storage tokenVesting = tokenVestings[_tokenId];
+        return tokenVesting.startTime;
+    }
+
+    function getVestingAmount(uint256 _tokenId) public view returns (uint256) {
+        Vesting storage tokenVesting = tokenVestings[_tokenId];
+        return tokenVesting.amount;
+    }
+
+    function getVestingRecipient(uint256 _tokenId)
+        public
+        view
+        returns (address)
+    {
+        Vesting storage tokenVesting = tokenVestings[_tokenId];
+        return tokenVesting.recipient;
+    }
+
     /// @notice Add a new token grant for an erc721 token with `_tokenId`.
     /// The amount of tokens here need to be preapproved for transfer by this `Vesting` contract before this call
-    /// @param _tokenId Grant unique erc721 token id
+    /// @param _tokenId Vesting unique erc721 token id
     /// @param _recipient Address of the token grant recipient entitled to claim the grant funds
     /// @param _amount Total number of tokens in
-    function addTokenGrant(
+    function _addTokenVesting(
         uint256 _tokenId,
         address _recipient,
         uint256 _amount
-    ) external onlyOwner {
-        require(tokenGrants[_tokenId].amount == 0, "Grant already exists");
+    ) internal {
+        require(tokenVestings[_tokenId].amount == 0, "Vesting already exists");
         uint256 amountVestedPerPeriod = _amount.div(uint256(vestingDuration));
         require(amountVestedPerPeriod > 0, "amountVestedPerPeriod > 0");
 
-        // Transfer the grant tokens under the control of the vesting contract
-        require(token.transferFrom(owner(), address(this), _amount));
-
-        Grant memory grant =
-            Grant({
+        Vesting memory vesting =
+            Vesting({
                 recipient: _recipient,
                 startTime: currentTime(),
                 amount: _amount,
@@ -92,110 +137,63 @@ contract VestingVault is Ownable {
                 totalClaimed: 0
             });
 
-        tokenGrants[_tokenId] = grant;
-        emit GrantAdded(_tokenId, _recipient, grant.amount);
+        tokenVestings[_tokenId] = vesting;
+        emit VestingAdded(_tokenId, _recipient, vesting.amount);
     }
 
-    function claimVestedTokens(uint256 _tokenId) public onlyOwner {
-        uint16 periodsVested;
-        uint256 amountVested;
-        (periodsVested, amountVested) = calculateGrantClaim(_tokenId);
-
-        require(amountVested > 0, "Vested is 0");
-
-        Grant storage tokenGrant = tokenGrants[_tokenId];
-
-        tokenGrant.periodsClaimed = uint16(
-            tokenGrant.periodsClaimed.add(periodsVested)
-        );
-        tokenGrant.totalClaimed = uint256(
-            tokenGrant.totalClaimed.add(amountVested)
-        );
-
-        require(
-            token.transfer(tokenGrant.recipient, amountVested),
-            "no tokens"
-        );
-        emit GrantTokensClaimed(tokenGrant.recipient, amountVested);
-    }
-
-    /// @notice Terminate token grant transferring all vested tokens to the grant `recipient`
+    /// @notice Terminate token vesting transferring all vested tokens to the vesting `recipient`
     /// and returning all non-vested tokens to the contract owner
     /// Secured to the contract owner only
-    /// @param _tokenId Grant unique erc721 token id
-    function revokeTokenGrant(uint256 _tokenId) external onlyOwner {
+    /// @param _tokenId Vesting unique erc721 token id
+    function _revokeTokenVesting(uint256 _tokenId) internal {
         uint16 periodsVested;
         uint256 amountVested;
-        (periodsVested, amountVested) = calculateGrantClaim(_tokenId);
+        (periodsVested, amountVested) = calculateVestingClaim(_tokenId);
 
-        Grant storage tokenGrant = tokenGrants[_tokenId];
+        Vesting storage tokenVesting = tokenVestings[_tokenId];
+        address recipient = tokenVesting.recipient;
 
-        uint256 amountNotVested =
-            (tokenGrant.amount.sub(tokenGrant.totalClaimed)).sub(amountVested);
+        tokenVesting.recipient = address(0);
+        tokenVesting.startTime = 0;
+        tokenVesting.amount = 0;
+        tokenVesting.periodsClaimed = 0;
+        tokenVesting.totalClaimed = 0;
 
-        require(token.transfer(owner(), amountNotVested));
-        require(token.transfer(tokenGrant.recipient, amountVested));
+        require(token.transfer(recipient, amountVested));
 
-        emit GrantRevoked(
-            _tokenId,
-            tokenGrant.recipient,
-            amountVested,
-            amountNotVested
-        );
-
-        tokenGrant.recipient = address(0);
-        tokenGrant.startTime = 0;
-        tokenGrant.amount = 0;
-        tokenGrant.periodsClaimed = 0;
-        tokenGrant.totalClaimed = 0;
+        emit VestingRevoked(_tokenId, recipient, amountVested);
     }
 
     /// @notice Transfer the recipient of a token grant with `_tokenId`
-    function transferTokenGrantRecipient(uint256 _tokenId, address _recipient)
-        external
-        onlyOwner
+    function _transferVestingRecipient(uint256 _tokenId, address _recipient)
+        internal
     {
         claimVestedTokens(_tokenId);
 
-        Grant storage tokenGrant = tokenGrants[_tokenId];
-        tokenGrant.recipient = _recipient;
+        Vesting storage tokenVesting = tokenVestings[_tokenId];
+        tokenVesting.recipient = _recipient;
 
-        emit GrantTransfered(_recipient);
-    }
-
-    function getGrantStartTime(uint256 _tokenId) public view returns (uint256) {
-        Grant storage tokenGrant = tokenGrants[_tokenId];
-        return tokenGrant.startTime;
-    }
-
-    function getGrantAmount(uint256 _tokenId) public view returns (uint256) {
-        Grant storage tokenGrant = tokenGrants[_tokenId];
-        return tokenGrant.amount;
-    }
-
-    function getGrantRecipient(uint256 _tokenId) public view returns (address) {
-        Grant storage tokenGrant = tokenGrants[_tokenId];
-        return tokenGrant.recipient;
+        emit VestingRecipientTransfered(_recipient);
     }
 
     /// @notice Calculate the vested and unclaimed days and tokens available for `_grantId` to claim
     /// Due to rounding errors once grant duration is reached, returns the entire left grant amount
     /// Returns (0, 0) if cliff has not been reached
-    function calculateGrantClaim(uint256 _tokenId)
+    function calculateVestingClaim(uint256 _tokenId)
         private
         view
         returns (uint16, uint256)
     {
-        Grant storage tokenGrant = tokenGrants[_tokenId];
+        Vesting storage tokenVesting = tokenVestings[_tokenId];
 
         require(
-            tokenGrant.totalClaimed < tokenGrant.amount,
-            "Grant fully claimed"
+            tokenVesting.totalClaimed < tokenVesting.amount,
+            "Vesting fully claimed"
         );
 
         // Check cliff was reached
         uint256 elapsedPeriods =
-            currentTime().sub(tokenGrant.startTime).div(vestingPeriod);
+            currentTime().sub(tokenVesting.startTime).div(vestingPeriod);
 
         if (elapsedPeriods < vestingCliff) {
             return (0, 0);
@@ -203,14 +201,14 @@ contract VestingVault is Ownable {
 
         // If over vesting duration, all tokens vested
         if (elapsedPeriods >= vestingDuration) {
-            uint256 remainingGrant =
-                tokenGrant.amount.sub(tokenGrant.totalClaimed);
-            return (vestingDuration, remainingGrant);
+            uint256 remainingVesting =
+                tokenVesting.amount.sub(tokenVesting.totalClaimed);
+            return (vestingDuration, remainingVesting);
         } else {
             uint16 periodsVested =
-                uint16(elapsedPeriods.sub(tokenGrant.periodsClaimed));
+                uint16(elapsedPeriods.sub(tokenVesting.periodsClaimed));
             uint256 amountVestedPerPeriod =
-                tokenGrant.amount.div(uint256(vestingDuration));
+                tokenVesting.amount.div(uint256(vestingDuration));
             uint256 amountVested =
                 uint256(periodsVested.mul(amountVestedPerPeriod));
             return (periodsVested, amountVested);

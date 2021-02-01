@@ -12,7 +12,7 @@ const overrides = {
   gasLimit: 9500000,
 }
 
-const ZERO_BYTES32 = '0x0000000000000000000000000000000000000000000000000000000000000000'
+const ZERO_BYTES32 = `0x${'00'.repeat(32)}`
 
 const getEthersSignersAddresses = async (): Promise<string[]> =>
   await Promise.all((await ethers.getSigners()).map((signer) => signer.getAddress()))
