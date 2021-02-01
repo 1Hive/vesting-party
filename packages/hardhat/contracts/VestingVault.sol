@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 
 contract VestingVault is Ownable {
     using SafeMath for uint256;
@@ -43,6 +43,7 @@ contract VestingVault is Ownable {
 
     ERC20 public token;
 
+    // tokenId to token grants
     mapping(uint256 => Grant) private tokenGrants;
 
     constructor(ERC20 _token) public {
@@ -55,15 +56,12 @@ contract VestingVault is Ownable {
     /// @param _tokenId Grant unique erc721 token id
     /// @param _recipient Address of the token grant recipient entitled to claim the grant funds
     /// @param _amount Total number of tokens in
-    /// @param _startTime Grant start time as seconds since unix epoch
-    /// Allows backdating grants by passing time in the past. If `0` is passed here current blocktime is used.
     /// @param _vestingDurationInDays Number of days of the grant's duration
     /// @param _vestingCliffInDays Number of days of the grant's vesting cliff
     function addTokenGrant(
         uint256 _tokenId,
         address _recipient,
         uint256 _amount,
-        uint256 _startTime,
         uint16 _vestingDurationInDays,
         uint16 _vestingCliffInDays
     ) external onlyOwner {
@@ -82,7 +80,7 @@ contract VestingVault is Ownable {
         Grant memory grant =
             Grant({
                 recipient: _recipient,
-                startTime: _startTime == 0 ? currentTime() : _startTime,
+                startTime: currentTime(),
                 amount: _amount,
                 vestingDuration: _vestingDurationInDays,
                 vestingCliff: _vestingCliffInDays,
@@ -192,17 +190,9 @@ contract VestingVault is Ownable {
             "Grant fully claimed"
         );
 
-        // For grants created with a future start date, that hasn't been reached, return 0, 0
-        if (currentTime() < tokenGrant.startTime) {
-            console.log("future start");
-            return (0, 0);
-        }
-
         // Check cliff was reached
         uint256 elapsedDays =
             currentTime().sub(tokenGrant.startTime).div(1 days);
-
-        console.log("elapsedDays:", elapsedDays);
 
         if (elapsedDays < tokenGrant.vestingCliff) {
             return (0, 0);
