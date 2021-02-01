@@ -16,7 +16,7 @@ contract VestingVault is Ownable {
     using SafeMath for uint16;
 
     uint256 internal constant ONE_MONTH = 2628000;
-    uint256[3] internal constant periods = [1 days, 1 weeks, ONE_MONTH];
+    uint256[3] internal periods = [1 days, 1 weeks, ONE_MONTH];
 
     uint256 public vestingPeriod;
     uint16 public vestingDuration;

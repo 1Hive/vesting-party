@@ -13,8 +13,6 @@ contract Offer is Ownable, ERC721 {
     using SafeMath for uint64; // TODO check if we should use SafeMath64
     using Counters for Counters.Counter;
 
-    enum Periods {Day, Week, Month}
-
     Counters.Counter private _tokenIds;
     VestingVault private _vestingVault;
     MerkleDistributor private _merkleDistributor;
@@ -22,9 +20,9 @@ contract Offer is Ownable, ERC721 {
     ERC20 public token;
 
     uint64 public upfrontVestingPct;
-    uint265 public offerEnd;
-
     uint64 public constant PCT_BASE = 10**18; // 0% = 0; 1% = 10^16; 100% = 10^18
+
+    uint256 public offerEnd;
 
     event ClaimedOffer(uint256 tokenId, address account, uint256 amount);
 
@@ -36,14 +34,16 @@ contract Offer is Ownable, ERC721 {
     constructor(
         address token_,
         bytes32 merkleRoot_,
-        Periods vestingPeriod_,
+        uint8 vestingPeriod_,
         uint16 vestingDurationInPeriods_,
         uint16 vestingCliffInPeriods_,
         uint64 upfrontVestingPct_,
         uint256 offerEnd_,
-        string memory erc721TokenName_,
+        string memory erc721Name_,
         string memory erc721Symbol_
     ) public ERC721(erc721Name_, erc721Symbol_) {
+        require(vestingDurationInPeriods_ > vestingCliffInPeriods_);
+
         token = ERC20(token_);
 
         _merkleDistributor = new MerkleDistributor(address(token), merkleRoot_);
