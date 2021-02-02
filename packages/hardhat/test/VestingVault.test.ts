@@ -2,7 +2,7 @@ import { waffle, ethers, artifacts } from 'hardhat'
 import { expect } from 'chai'
 import { BigNumber, Signer } from 'ethers'
 import { takeSnapshot, restoreSnapshot, increase, duration } from '../src/rpc'
-import { TestERC20, VestingVault } from '../typechain'
+import { TestERC20, TestVestingVault } from '../typechain'
 
 const { deployContract } = waffle
 
@@ -19,16 +19,16 @@ const EVENTS = {
   ADDED: 'VestingAdded',
   REVOKED: 'VestingRevoked',
   CLAIMED: 'VestingTokensClaimed',
-  TRANSFERED: 'VestingTransfered',
+  TRANSFERED: 'VestingRecipientTransfered',
 }
 
 const overrides = {
   gasLimit: 9500000,
 }
 
-describe('VestingVault', () => {
+describe('TestVestingVault', () => {
   let token: TestERC20
-  let vault: VestingVault
+  let vault: TestVestingVault
 
   let snapshotId
 
@@ -47,11 +47,13 @@ describe('VestingVault', () => {
       ['Token', 'TKN', amount],
       overrides
     )) as TestERC20
-    await token.setBalance(await owner.getAddress(), amount)
   })
 
   beforeEach(async () => {
     snapshotId = await takeSnapshot()
+    await token.setBalance(ownerAddress, 0)
+    await token.setBalance(otherAddress, 0)
+    await token.setBalance(vault.address, amount)
   })
 
   afterEach(async () => {
@@ -62,11 +64,10 @@ describe('VestingVault', () => {
     before(async function () {
       vault = (await deployContract(
         owner,
-        await artifacts.readArtifact('VestingVault'),
+        await artifacts.readArtifact('TestVestingVault'),
         [token.address, 0, 10, 2],
         overrides
-      )) as VestingVault
-      await token.approve(vault.address, 1000)
+      )) as TestVestingVault
     })
 
     it('should only allow owner to grant', async function () {
@@ -86,7 +87,7 @@ describe('VestingVault', () => {
 
     it('should emit an event on revoke', async function () {
       await vault._addTokenVesting(0, otherAddress, 10)
-      await expect(vault._revokeTokenVesting(0)).to.emit(vault, EVENTS.REVOKED).withArgs(0, otherAddress, 0, 10)
+      await expect(vault._revokeTokenVesting(0)).to.emit(vault, EVENTS.REVOKED).withArgs(0, otherAddress, 0)
     })
 
     it('should emit an event on claim', async function () {
@@ -110,10 +111,6 @@ describe('VestingVault', () => {
     it('can get grant recipient', async function () {
       await vault._addTokenVesting(0, otherAddress, 1000)
       expect(await vault.getVestingRecipient(0)).to.equal(otherAddress)
-    })
-
-    it('should reject transfer outside of allowance', async function () {
-      await expect(vault._addTokenVesting(0, otherAddress, 1001)).to.be.revertedWith(ERRORS.ALLOWANCE)
     })
 
     it('can not add a grant if one already exists', async function () {
@@ -180,9 +177,8 @@ describe('VestingVault', () => {
 
       // Revoke claim vested tokens for the elapsed days
       await vault._revokeTokenVesting(0)
-      expect((await token.balanceOf(ownerAddress)).toString()).to.equal('700')
       expect((await token.balanceOf(otherAddress)).toString()).to.equal('300')
-      expect((await token.balanceOf(vault.address)).toString()).to.equal('0')
+      expect((await token.balanceOf(vault.address)).toString()).to.equal('700')
     })
   })
 
@@ -190,10 +186,10 @@ describe('VestingVault', () => {
     before(async function () {
       vault = (await deployContract(
         owner,
-        await artifacts.readArtifact('VestingVault'),
+        await artifacts.readArtifact('TestVestingVault'),
         [token.address, 0, 10, 0],
         overrides
-      )) as VestingVault
+      )) as TestVestingVault
       await token.approve(vault.address, 1000)
     })
   })
@@ -202,10 +198,10 @@ describe('VestingVault', () => {
     before(async function () {
       vault = (await deployContract(
         owner,
-        await artifacts.readArtifact('VestingVault'),
+        await artifacts.readArtifact('TestVestingVault'),
         [token.address, 0, 5, 3],
         overrides
-      )) as VestingVault
+      )) as TestVestingVault
       await token.approve(vault.address, 1000)
     })
 
@@ -239,10 +235,10 @@ describe('VestingVault', () => {
     before(async function () {
       vault = (await deployContract(
         owner,
-        await artifacts.readArtifact('VestingVault'),
+        await artifacts.readArtifact('TestVestingVault'),
         [token.address, 0, 3, 0],
         overrides
-      )) as VestingVault
+      )) as TestVestingVault
       await token.approve(vault.address, 1000)
     })
 
@@ -272,10 +268,10 @@ describe('VestingVault', () => {
     before(async function () {
       vault = (await deployContract(
         owner,
-        await artifacts.readArtifact('VestingVault'),
+        await artifacts.readArtifact('TestVestingVault'),
         [token.address, 0, 1, 0],
         overrides
-      )) as VestingVault
+      )) as TestVestingVault
       await token.approve(vault.address, 1000)
     })
     it('vests immediately if no cliff', async function () {

@@ -28,7 +28,7 @@ contract Offer is Ownable, VestingVault, ERC721 {
     event OfferClaimed(uint256 tokenId, address account, uint256 amount);
 
     modifier onlyAfter(uint256 _time) {
-        require(now > _time);
+        require(now > _time, "Offer: duration not reach.");
         _;
     }
 
@@ -53,6 +53,7 @@ contract Offer is Ownable, VestingVault, ERC721 {
         ERC721(_erc721Name, _erc721Symbol)
     {
         upfrontVestingPct = _upfrontVestingPct;
+
         offerEnd = _offerDuration.add(now);
 
         _merkleDistributor = new MerkleDistributor(address(token), _merkleRoot);
@@ -76,7 +77,7 @@ contract Offer is Ownable, VestingVault, ERC721 {
         _addTokenVesting(
             newItemId,
             account,
-            uint256(amount.mul(PCT_BASE.sub(upfrontVestingPct).div(PCT_BASE)))
+            uint256(amount.mul(PCT_BASE.sub(upfrontVestingPct)).div(PCT_BASE))
         );
 
         // Send upfront tokens.
@@ -121,8 +122,8 @@ contract Offer is Ownable, VestingVault, ERC721 {
     /// @notice Withdraw all tokens from the Offer to the `recipient` address. Only allowed after the offer ends.
     function withdrawTokens(address recipient)
         external
-        onlyAfter(offerEnd)
         onlyOwner
+        onlyAfter(offerEnd)
     {
         require(
             token.transfer(recipient, token.balanceOf(address(this))),

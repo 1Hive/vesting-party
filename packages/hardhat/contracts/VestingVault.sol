@@ -124,7 +124,8 @@ contract VestingVault {
         address _recipient,
         uint256 _amount
     ) internal {
-        require(tokenVestings[_tokenId].amount == 0, "Vesting already exists");
+        // No need to check this here as the merkleDistributor already check
+        // require(tokenVestings[_tokenId].amount == 0, "Vesting already exists");
         uint256 amountVestedPerPeriod = _amount.div(uint256(vestingDuration));
         require(amountVestedPerPeriod > 0, "amountVestedPerPeriod > 0");
 
@@ -138,6 +139,7 @@ contract VestingVault {
             });
 
         tokenVestings[_tokenId] = vesting;
+
         emit VestingAdded(_tokenId, _recipient, vesting.amount);
     }
 
