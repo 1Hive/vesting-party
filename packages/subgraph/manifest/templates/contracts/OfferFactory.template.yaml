@@ -1,0 +1,24 @@
+- kind: ethereum/contract
+  name: {{name}}
+  network: {{network}}
+  source:
+    abi: OfferFactory
+    address: "{{address}}"
+    startBlock: {{startBlock}}
+  mapping:
+    kind: ethereum/events
+    apiVersion: 0.0.4
+    language: wasm/assemblyscript
+    entities:
+      - OfferFactory
+      - Offer
+      - ERC20
+    abis:
+      - name: OfferFactory
+        file: ./abis/OfferFactory.json
+      - name: ERC20
+        file: ./abis/ERC20.json
+    callHandlers:
+      - function: createOffer(address,bytes32,uint256,uint64,uint8,uint16,uint16,string,string)
+        handler: handleCreateOffer
+    file: ./src/mapping.ts

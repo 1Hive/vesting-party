@@ -1,34 +1,90 @@
-import { BigInt, Address } from "@graphprotocol/graph-ts"
+import { BigInt, Address } from "@graphprotocol/graph-ts";
+import { ERC20 as ERC20Contract } from "../generated/OfferFactory/ERC20";
+import { CreateOfferCall } from "../generated/OfferFactory/OfferFactory";
 import {
-  YourContract,
-  SetPurpose
-} from "../generated/YourContract/YourContract"
-import { Purpose, Sender } from "../generated/schema"
+  OfferClaimed,
+  VestingAdded,
+  VestingRecipientTransfered,
+  VestingTokensClaimed,
+} from "../generated/templates/Offer/Offer";
+import {
+  Offer as OfferEntity,
+  OfferFactory as OfferFactoryEntity,
+  Vesting,
+  Claim,
+  ERC20 as ERC20Entity,
+} from "../generated/schema";
+import { Offer as OfferTemplate } from "../generated/templates";
 
-export function handleSetPurpose(event: SetPurpose): void {
+export function handleCreateOffer(call: CreateOfferCall): void {
+  const factory = loadOrCreateFactory(call.to);
+  const offer = loadOrCreateOffer(call.outputs.offer);
 
-  let senderString = event.params.sender.toHexString()
+  factory.count = factory.count + 1;
 
-  let sender = Sender.load(senderString)
+  offer.createdAt = call.block.timestamp;
+  offer.name = call.inputs._erc721Name;
+  offer.symbol = call.inputs._erc721Symbol;
+  offer.token = buildERC20(call.inputs._token);
+  offer.merkleRoot = call.inputs._merkleRoot;
+  offer.duration = call.inputs._offerDuration;
+  offer.upfrontPct = call.inputs._upfrontVestingPct;
+  offer.periodUnit = castPeriodUnit(call.inputs._vestingPeriodUnit);
+  offer.vestingDurationInPeriods = call.inputs._vestingDurationInPeriods;
+  offer.vestingCliffInPeriods = call.inputs._vestingCliffInPeriods;
 
-  if (sender == null) {
-    sender = new Sender(senderString)
-    sender.address = event.params.sender
-    sender.createdAt = event.block.timestamp
-    sender.purposeCount = BigInt.fromI32(1)
+  // save to the store
+  factory.save();
+  offer.save();
+
+  OfferTemplate.create(call.outputs.offer);
+}
+
+function loadOrCreateFactory(address: Address): OfferFactoryEntity {
+  let factory = OfferFactoryEntity.load("1");
+  // if no factory yet, set up empty
+  if (factory === null) {
+    factory = new OfferFactoryEntity("1");
+    factory.address = address;
+    factory.count = 0;
   }
-  else {
-    sender.purposeCount = sender.purposeCount.plus(BigInt.fromI32(1))
+  return factory!;
+}
+
+export function loadOrCreateOffer(address: Address): OfferEntity {
+  let offer = OfferEntity.load(address.toHex());
+  if (offer === null) {
+    offer = new OfferEntity(address.toHex());
+    offer.address = address;
+  }
+  return offer!;
+}
+
+export function buildERC20(address: Address): string {
+  const id = address.toHexString();
+  let token = ERC20Entity.load(id);
+
+  if (token === null) {
+    const tokenContract = ERC20Contract.bind(address);
+    token = new ERC20Entity(id);
+    token.name = tokenContract.name();
+    token.symbol = tokenContract.symbol();
+    token.decimals = tokenContract.decimals();
+    token.save();
   }
 
-  let purpose = new Purpose(event.transaction.hash.toHex() + "-" + event.logIndex.toString())
+  return token.id;
+}
 
-  purpose.purpose = event.params.purpose
-  purpose.sender = senderString
-  purpose.createdAt = event.block.timestamp
-  purpose.transactionHash = event.transaction.hash.toHex()
-
-  purpose.save()
-  sender.save()
-
+function castPeriodUnit(state: Number): string {
+  switch (state) {
+    case 0:
+      return "Day";
+    case 1:
+      return "Week";
+    case 2:
+      return "Month";
+    default:
+      return "Unknown";
+  }
 }

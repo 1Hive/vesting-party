@@ -1,0 +1,12 @@
+{
+  "network": "localhost",
+  "dataSources": {
+    "OfferFactory": [
+      {
+        "name": "OfferFactory",
+        "address": "0x87eE5EA31dCf1f526f21Bb576131C37890AE65E0",
+        "startBlock": 1
+      }
+    ]
+  }
+}

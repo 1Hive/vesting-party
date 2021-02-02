@@ -8,13 +8,20 @@
     "deploy": "graph deploy --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ GITHUB_USERNAME/your-contract",
     "create-local": "graph create --node http://localhost:8020/ scaffold-eth/your-contract",
     "remove-local": "graph remove --node http://localhost:8020/ scaffold-eth/your-contract",
-    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 scaffold-eth/your-contract"
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 scaffold-eth/your-contract",
+    "manifest-local": "scripts/build-manifest.sh hardhat",
+    "manifest-mainnet": "scripts/build-manifest.sh mainnet",
+    "manifest-rinkeby": "scripts/build-manifest.sh rinkeby",
+    "manifest-xdai": "scripts/build-manifest.sh xdai",
+    "deploy-mainnet": "scripts/deploy.sh 1hive mainnet",
+    "deploy-rinkeby": "scripts/deploy.sh 1hive rinkeby",
+    "deploy-xdai": "scripts/deploy.sh 1hive xdai"
   },
   "dependencies": {
-    "@graphprotocol/graph-cli": "0.18.0",
-    "@graphprotocol/graph-ts": "0.18.0"
+    "@graphprotocol/graph-cli": "0.19.0",
+    "@graphprotocol/graph-ts": "0.19.0"
   },
   "devDependencies": {
-    "mustache": "^3.1.0"
+    "mustache": "^4.1.0"
   }
 }
