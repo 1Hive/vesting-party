@@ -7,10 +7,11 @@ pragma solidity >=0.6.0 <0.7.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "hardhat/console.sol";
 
-contract VestingVault {
+contract TestVestingVault is Ownable {
     using SafeMath for uint256;
     using SafeMath for uint16;
 
@@ -123,9 +124,8 @@ contract VestingVault {
         uint256 _tokenId,
         address _recipient,
         uint256 _amount
-    ) internal {
-        // No need to check this here as the merkleDistributor already check
-        // require(tokenVestings[_tokenId].amount == 0, "Vesting already exists");
+    ) public onlyOwner {
+        require(tokenVestings[_tokenId].amount == 0, "Vesting already exists");
         uint256 amountVestedPerPeriod = _amount.div(uint256(vestingDuration));
         require(amountVestedPerPeriod > 0, "amountVestedPerPeriod > 0");
 
@@ -139,7 +139,6 @@ contract VestingVault {
             });
 
         tokenVestings[_tokenId] = vesting;
-
         emit VestingAdded(_tokenId, _recipient, vesting.amount);
     }
 
@@ -147,7 +146,7 @@ contract VestingVault {
     /// and returning all non-vested tokens to the contract owner
     /// Secured to the contract owner only
     /// @param _tokenId Vesting unique erc721 token id
-    function _revokeTokenVesting(uint256 _tokenId) internal {
+    function _revokeTokenVesting(uint256 _tokenId) public onlyOwner {
         uint16 periodsVested;
         uint256 amountVested;
         (periodsVested, amountVested) = calculateVestingClaim(_tokenId);
@@ -168,7 +167,8 @@ contract VestingVault {
 
     /// @notice Transfer the recipient of a token grant with `_tokenId`
     function _transferVestingRecipient(uint256 _tokenId, address _recipient)
-        internal
+        public
+        onlyOwner
     {
         claimVestedTokens(_tokenId);
 

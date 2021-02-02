@@ -9,54 +9,54 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./MerkleDistributor.sol";
 import "./VestingVault.sol";
 
-contract Offer is Ownable, ERC721 {
-    using SafeMath for uint64; // TODO check if we should use SafeMath64
+import "hardhat/console.sol";
+
+contract Offer is Ownable, VestingVault, ERC721 {
+    using SafeMath for uint256;
+    using SafeMath for uint64;
+    using SafeMath for uint16;
     using Counters for Counters.Counter;
 
     Counters.Counter private _tokenIds;
-    VestingVault private _vestingVault;
     MerkleDistributor private _merkleDistributor;
 
-    ERC20 public token;
-
-    uint64 public upfrontVestingPct;
     uint64 public constant PCT_BASE = 10**18; // 0% = 0; 1% = 10^16; 100% = 10^18
 
+    uint64 public upfrontVestingPct;
     uint256 public offerEnd;
 
-    event ClaimedOffer(uint256 tokenId, address account, uint256 amount);
+    event OfferClaimed(uint256 tokenId, address account, uint256 amount);
 
     modifier onlyAfter(uint256 _time) {
-        require(now > _time);
+        require(now > _time, "Offer: duration not reach.");
         _;
     }
 
     constructor(
-        address token_,
-        bytes32 merkleRoot_,
-        uint8 vestingPeriod_,
-        uint16 vestingDurationInPeriods_,
-        uint16 vestingCliffInPeriods_,
-        uint64 upfrontVestingPct_,
-        uint256 offerEnd_,
-        string memory erc721Name_,
-        string memory erc721Symbol_
-    ) public ERC721(erc721Name_, erc721Symbol_) {
-        require(vestingDurationInPeriods_ > vestingCliffInPeriods_);
+        address _token,
+        bytes32 _merkleRoot,
+        uint256 _offerDuration,
+        uint64 _upfrontVestingPct,
+        uint8 _vestingPeriodUnit,
+        uint16 _vestingDurationInPeriods,
+        uint16 _vestingCliffInPeriods,
+        string memory _erc721Name,
+        string memory _erc721Symbol
+    )
+        public
+        VestingVault(
+            _token,
+            _vestingPeriodUnit,
+            _vestingDurationInPeriods,
+            _vestingCliffInPeriods
+        )
+        ERC721(_erc721Name, _erc721Symbol)
+    {
+        upfrontVestingPct = _upfrontVestingPct;
 
-        token = ERC20(token_);
+        offerEnd = _offerDuration.add(now);
 
-        _merkleDistributor = new MerkleDistributor(address(token), merkleRoot_);
-
-        _vestingVault = new VestingVault(
-            token,
-            vestingPeriod_,
-            vestingDurationInPeriods_,
-            vestingCliffInPeriods_
-        );
-
-        upfrontVestingPct = upfrontVestingPct_;
-        offerEnd = offerEnd_;
+        _merkleDistributor = new MerkleDistributor(address(token), _merkleRoot);
     }
 
     function claimOffer(
@@ -74,39 +74,24 @@ contract Offer is Ownable, ERC721 {
         _safeMint(account, newItemId);
 
         // Grant vesting tokens.
-        _vestingVault.addTokenGrant(
+        _addTokenVesting(
             newItemId,
             account,
-            amount.mul(PCT_BASE.sub(upfrontVestingPct).div(PCT_BASE))
+            uint256(amount.mul(PCT_BASE.sub(upfrontVestingPct)).div(PCT_BASE))
         );
 
         // Send upfront tokens.
         if (upfrontVestingPct != 0) {
-            uint256 upfrontAmount = amount.mul(upfrontVestingPct).div(PCT_BASE);
             require(
-                token.transfer(account, upfrontAmount),
+                token.transfer(
+                    account,
+                    uint256(amount.mul(upfrontVestingPct).div(PCT_BASE))
+                ),
                 "Offer: Transfer failed."
             );
         }
 
-        emit ClaimedOffer(newItemId, account, amount);
-    }
-
-    /// @notice Allows to claim the vested tokens of a grant with `tokenId`. Errors if no tokens have vested
-    function claimVestedTokens(uint256 tokenId) external {
-        _vestingVault.claimVestedTokens(tokenId);
-    }
-
-    /// @notice Withdraw all tokens from the Offer to the `recipient` address. Only allowed after the offer ends.
-    function withdrawTokens(address recipient)
-        external
-        onlyAfter(offerEnd)
-        onlyOwner
-    {
-        require(
-            token.transfer(recipient, token.balanceOf(address(this))),
-            "Offer: Transfer failed."
-        );
+        emit OfferClaimed(newItemId, account, amount);
     }
 
     function transferFrom(
@@ -114,8 +99,10 @@ contract Offer is Ownable, ERC721 {
         address to,
         uint256 tokenId
     ) public override {
-        require(_vestingVault.getGrantRecipient(tokenId) == from);
-        _vestingVault.transferTokenGrantRecipient(tokenId, to);
+        require(getVestingRecipient(tokenId) == from);
+
+        _transferVestingRecipient(tokenId, to);
+
         super.transferFrom(from, to, tokenId);
     }
 
@@ -125,8 +112,22 @@ contract Offer is Ownable, ERC721 {
         uint256 tokenId,
         bytes memory data
     ) public override {
-        require(_vestingVault.getGrantRecipient(tokenId) == from);
-        _vestingVault.transferTokenGrantRecipient(tokenId, to);
+        require(getVestingRecipient(tokenId) == from);
+
+        _transferVestingRecipient(tokenId, to);
+
         super.safeTransferFrom(from, to, tokenId, data);
+    }
+
+    /// @notice Withdraw all tokens from the Offer to the `recipient` address. Only allowed after the offer ends.
+    function withdrawTokens(address recipient)
+        external
+        onlyOwner
+        onlyAfter(offerEnd)
+    {
+        require(
+            token.transfer(recipient, token.balanceOf(address(this))),
+            "Offer: Transfer failed."
+        );
     }
 }
