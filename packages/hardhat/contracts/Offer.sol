@@ -91,6 +91,7 @@ contract Offer is Ownable, VestingVault, ERC721 {
             );
         }
 
+        // TODO consider rename event
         emit OfferClaimed(newItemId, account, amount);
     }
 

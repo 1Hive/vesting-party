@@ -8,11 +8,11 @@ import {
   VestingTokensClaimed,
 } from "../generated/templates/Offer/Offer";
 import {
-  Offer as OfferEntity,
-  OfferFactory as OfferFactoryEntity,
+  Offer,
+  OfferFactory,
   Vesting,
   Claim,
-  ERC20 as ERC20Entity,
+  ERC20 as ERC20,
 } from "../generated/schema";
 import { Offer as OfferTemplate } from "../generated/templates";
 
@@ -40,21 +40,33 @@ export function handleCreateOffer(call: CreateOfferCall): void {
   OfferTemplate.create(call.outputs.offer);
 }
 
-function loadOrCreateFactory(address: Address): OfferFactoryEntity {
-  let factory = OfferFactoryEntity.load("1");
+export function handleOfferClaimed(event: OfferClaimed): void {
+  const vesting = buildVestingId(event.address, event.params.tokenId);
+}
+
+export function handleVestingAdded(event: VestingAdded): void {}
+
+export function handleVestingRecipientTransfered(
+  event: VestingRecipientTransfered
+): void {}
+
+export function handleVestingTokensClaimed(event: VestingTokensClaimed): void {}
+
+function loadOrCreateFactory(address: Address): OfferFactory {
+  let factory = OfferFactory.load("1");
   // if no factory yet, set up empty
   if (factory === null) {
-    factory = new OfferFactoryEntity("1");
+    factory = new OfferFactory("1");
     factory.address = address;
     factory.count = 0;
   }
   return factory!;
 }
 
-export function loadOrCreateOffer(address: Address): OfferEntity {
-  let offer = OfferEntity.load(address.toHex());
+export function loadOrCreateOffer(address: Address): Offer {
+  let offer = Offer.load(address.toHex());
   if (offer === null) {
-    offer = new OfferEntity(address.toHex());
+    offer = new Offer(address.toHex());
     offer.address = address;
   }
   return offer!;
@@ -62,11 +74,11 @@ export function loadOrCreateOffer(address: Address): OfferEntity {
 
 export function buildERC20(address: Address): string {
   const id = address.toHexString();
-  let token = ERC20Entity.load(id);
+  let token = ERC20.load(id);
 
   if (token === null) {
     const tokenContract = ERC20Contract.bind(address);
-    token = new ERC20Entity(id);
+    token = new ERC20(id);
     token.name = tokenContract.name();
     token.symbol = tokenContract.symbol();
     token.decimals = tokenContract.decimals();
@@ -74,6 +86,10 @@ export function buildERC20(address: Address): string {
   }
 
   return token.id;
+}
+
+export function buildVestingId(vesting: Address, tokenId: BigInt): string {
+  return vesting.toHexString() + "-nft-" + tokenId.toString();
 }
 
 function castPeriodUnit(state: Number): string {
