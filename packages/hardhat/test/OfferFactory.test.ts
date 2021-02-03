@@ -6,6 +6,10 @@ import BalanceTree from '../src/balance-tree'
 import { duration } from '../src/rpc'
 import { OfferFactory, OfferFactory__factory, TestERC20, TestERC20__factory } from '../typechain'
 
+const EVENTS = {
+  NEW_OFFER: 'NewOffer',
+}
+
 const overrides = {
   gasLimit: 9500000,
 }
@@ -33,6 +37,13 @@ describe('Offer Factory', function () {
     const OfferFactory = (await ethers.getContractFactory('OfferFactory')) as OfferFactory__factory
 
     offerFactory = await OfferFactory.deploy()
+  })
+
+  it(`should deploy correctly`, async () => {
+    await expect(offerFactory.createOffer(token.address, tree.getHexRoot(), duration.years(1), 0, 0, 10, 2)).to.emit(
+      offerFactory,
+      EVENTS.NEW_OFFER
+    )
   })
 
   const GAS_TARGET = !process.env.SOLIDITY_COVERAGE ? 6.5e6 : 3e6

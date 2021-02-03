@@ -4,6 +4,8 @@ pragma solidity >=0.6.0 <0.7.0;
 import "./Offer.sol";
 
 contract OfferFactory {
+    event NewOffer(address offer);
+
     function createOffer(
         address _token,
         bytes32 _merkleRoot,
@@ -13,15 +15,18 @@ contract OfferFactory {
         uint16 _vestingDurationInPeriods,
         uint16 _vestingCliffInPeriods
     ) public returns (Offer offer) {
-        return
-            new Offer(
-                _token,
-                _merkleRoot,
-                _offerDuration,
-                _upfrontVestingPct,
-                _vestingPeriodUnit,
-                _vestingDurationInPeriods,
-                _vestingCliffInPeriods
-            );
+        offer = new Offer(
+            _token,
+            _merkleRoot,
+            _offerDuration,
+            _upfrontVestingPct,
+            _vestingPeriodUnit,
+            _vestingDurationInPeriods,
+            _vestingCliffInPeriods
+        );
+
+        emit NewOffer(address(offer));
+
+        return offer;
     }
 }
