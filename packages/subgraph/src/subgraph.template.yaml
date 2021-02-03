@@ -21,14 +21,14 @@ templates:
         - ERC721
       abis:
         - name: Offer
-          file: ./abis/Offer.json
+          file: $HARDHAT_PACKAGE/abis/contracts/Offer.sol/Offer.json
       eventHandlers:
-        - event: VestingAdded(indexed uint256,indexed address,uint256)
+        - event: VestingAdded(indexed uint256)
           handler: handleVestingAdded
-        - event: OfferClaimed(uint256,address,uint256)
+        - event: OfferClaimed(indexed uint256)
           handler: handleOfferClaimed
-        - event: VestingTokensClaimed(indexed address,uint256)
+        - event: VestingBeneficiaryTransfered(indexed uint256)
           handler: handleVestingTokensClaimed
-        - event: VestingRecipientTransfered(indexed address)
-          handler: handleVestingRecipientTransfered
+        - event: VestingBeneficiaryTransfered(indexed uint256)
+          handler: handleVestingBeneficiaryTransfered
       file: ./src/mapping.ts

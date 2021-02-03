@@ -37,8 +37,8 @@ contract VestingVault {
         address beneficiary,
         uint256 amountVested
     );
-    event VestingTokensClaimed(uint256 indexed tokenId);
-    event VestingBeneficiaryTransfered(address indexed beneficiary);
+    event VestingTokensClaimed(uint256 indexed tokenId, uint256 amountVested);
+    event VestingBeneficiaryTransfered(uint256 indexed tokenId);
 
     // unique erc721 token id to token vesting
     mapping(uint256 => Vesting) private tokenVestings;
@@ -81,7 +81,7 @@ contract VestingVault {
             token.transfer(tokenVesting.beneficiary, amountVested),
             "no tokens"
         );
-        emit VestingTokensClaimed(_tokenId);
+        emit VestingTokensClaimed(_tokenId, amountVested);
     }
 
     function getVestingStartTime(uint256 _tokenId)
@@ -163,7 +163,7 @@ contract VestingVault {
         Vesting storage tokenVesting = tokenVestings[_tokenId];
         tokenVesting.beneficiary = _beneficiary;
 
-        emit VestingBeneficiaryTransfered(_beneficiary);
+        emit VestingBeneficiaryTransfered(_tokenId);
     }
 
     /// @notice Terminate token vesting transferring all vested tokens to the vesting `beneficiary`

@@ -26,7 +26,7 @@ type Vesting @entity {
   tokenId: BigInt!
   offer: Offer!
   startTime: BigInt!
-  recipient: Bytes!
+  beneficiary: Bytes!
   amount: BigInt!
   periodsClaimed: Int!
   amountClaimed: BigInt!
@@ -36,6 +36,9 @@ type Vesting @entity {
 type Claim @entity {
   id: ID!
   vesting: Vesting!
+  createdAt: BigInt!
+  beneficiary: Bytes!
+  amount: BigInt!
 }
 
 type ERC20 @entity {
