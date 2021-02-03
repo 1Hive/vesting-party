@@ -14,9 +14,9 @@ type Offer @entity {
   symbol: String!
   token: ERC20!
   merkleRoot: Bytes!
-  duration: BigInt!
+  endAt: BigInt!
   upfrontPct: BigInt!
-  periodUnit: PeriodUnit!
+  vestingPeriod: BigInt!
   vestingDurationInPeriods: Int!
   vestingCliffInPeriods: Int!
   vestings: [Vesting!] @derivedFrom(field: "offer")
@@ -47,10 +47,4 @@ type ERC20 @entity {
   name: String!
   symbol: String!
   decimals: Int!
-}
-
-enum PeriodUnit {
-  Day
-  Week
-  Month
 }

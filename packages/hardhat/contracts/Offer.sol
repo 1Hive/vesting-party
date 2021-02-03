@@ -18,10 +18,12 @@ contract Offer is Ownable, VestingVault, ERC721 {
     using Counters for Counters.Counter;
 
     Counters.Counter private _tokenIds;
-    MerkleDistributor private _merkleDistributor;
+
+    MerkleDistributor public merkleDistributor;
 
     uint64 public constant PCT_BASE = 10**18; // 0% = 0; 1% = 10^16; 100% = 10^18
 
+    bytes32 public merkleRoot;
     uint64 public upfrontVestingPct;
     uint256 public offerEnd;
 
@@ -54,10 +56,9 @@ contract Offer is Ownable, VestingVault, ERC721 {
         )
     {
         upfrontVestingPct = _upfrontVestingPct;
-
         offerEnd = _offerDuration.add(now);
-
-        _merkleDistributor = new MerkleDistributor(address(token), _merkleRoot);
+        merkleRoot = _merkleRoot;
+        merkleDistributor = new MerkleDistributor(address(token), _merkleRoot);
     }
 
     function claimOffer(
@@ -67,7 +68,7 @@ contract Offer is Ownable, VestingVault, ERC721 {
         bytes32[] calldata merkleProof
     ) external {
         // Here we do the proof verification and revert if beneficiary can't claim
-        _merkleDistributor.claim(index, beneficiary, amount, merkleProof);
+        merkleDistributor.claim(index, beneficiary, amount, merkleProof);
 
         // Mint erc721 token.
         _tokenIds.increment();

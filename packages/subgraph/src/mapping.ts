@@ -1,6 +1,6 @@
 import { BigInt, Address } from "@graphprotocol/graph-ts";
 import { ERC20 as ERC20Contract } from "../generated/OfferFactory/ERC20";
-import { CreateOfferCall } from "../generated/OfferFactory/OfferFactory";
+import { NewOffer } from "../generated/OfferFactory/OfferFactory";
 import {
   OfferClaimed,
   VestingAdded,
@@ -17,27 +17,33 @@ import {
 } from "../generated/schema";
 import { Offer as OfferTemplate } from "../generated/templates";
 
-export function handleCreateOffer(call: CreateOfferCall): void {
-  const factory = loadOrCreateFactory(call.to);
-  const offer = loadOrCreateOffer(call.outputs.offer);
+export function handleNewOffer(event: NewOffer): void {
+  const factory = loadOrCreateFactory(event.address);
+  const offer = loadOrCreateOffer(event.params.offer);
+
+  const offerContract = OfferContract.bind(event.address);
+
+  const token = offerContract.token();
+  const tokenContract = ERC20Contract.bind(token);
 
   factory.count = factory.count + 1;
 
-  offer.createdAt = call.block.timestamp;
-  offer.name = call.inputs._erc721Name;
-  offer.symbol = call.inputs._erc721Symbol;
-  offer.token = buildERC20(call.inputs._token);
-  offer.merkleRoot = call.inputs._merkleRoot;
-  offer.duration = call.inputs._offerDuration;
-  offer.upfrontPct = call.inputs._upfrontVestingPct;
-  offer.periodUnit = castPeriodUnit(call.inputs._vestingPeriodUnit);
-  offer.vestingDurationInPeriods = call.inputs._vestingDurationInPeriods;
-  offer.vestingCliffInPeriods = call.inputs._vestingCliffInPeriods;
+  offer.createdAt = event.block.timestamp;
+  offer.factory = factory.id;
+  offer.name = "Vested " + tokenContract.name();
+  offer.symbol = "v" + tokenContract.symbol();
+  offer.token = buildERC20(token);
+  offer.merkleRoot = offerContract.merkleRoot();
+  offer.endAt = offerContract.offerEnd();
+  offer.upfrontPct = offerContract.upfrontVestingPct();
+  offer.vestingPeriod = offerContract.vestingPeriod();
+  offer.vestingDurationInPeriods = offerContract.vestingDuration();
+  offer.vestingCliffInPeriods = offerContract.vestingCliff();
 
   factory.save();
   offer.save();
 
-  OfferTemplate.create(call.outputs.offer);
+  OfferTemplate.create(event.params.offer);
 }
 
 export function handleOfferClaimed(event: OfferClaimed): void {
@@ -160,17 +166,4 @@ function buildClaimId(
   logIndex: string
 ): string {
   return offer.toHexString() + "-nft-" + tokenId.toString() + "-" + logIndex;
-}
-
-function castPeriodUnit(state: i32): string {
-  switch (state) {
-    case 0:
-      return "Day";
-    case 1:
-      return "Week";
-    case 2:
-      return "Month";
-    default:
-      return "Unknown";
-  }
 }
