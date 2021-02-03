@@ -39,9 +39,7 @@ contract Offer is Ownable, VestingVault, ERC721 {
         uint64 _upfrontVestingPct,
         uint8 _vestingPeriodUnit,
         uint16 _vestingDurationInPeriods,
-        uint16 _vestingCliffInPeriods,
-        string memory _erc721Name,
-        string memory _erc721Symbol
+        uint16 _vestingCliffInPeriods
     )
         public
         VestingVault(
@@ -50,7 +48,10 @@ contract Offer is Ownable, VestingVault, ERC721 {
             _vestingDurationInPeriods,
             _vestingCliffInPeriods
         )
-        ERC721(_erc721Name, _erc721Symbol)
+        ERC721(
+            string(abi.encodePacked("Vested ", ERC20(_token).name())),
+            string(abi.encodePacked("v", ERC20(_token).symbol()))
+        )
     {
         upfrontVestingPct = _upfrontVestingPct;
 

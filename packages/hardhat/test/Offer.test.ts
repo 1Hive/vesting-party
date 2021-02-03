@@ -59,8 +59,13 @@ describe('Offer', function () {
         { account: wallet1, amount: BigNumber.from(200) },
       ])
       const Offer = (await ethers.getContractFactory('Offer')) as Offer__factory
-      offer = (await Offer.deploy(token.address, tree.getHexRoot(), ONE_YEAR, 0, 0, 10, 2, 'Vesting', 'VST')) as Offer
+      offer = (await Offer.deploy(token.address, tree.getHexRoot(), ONE_YEAR, 0, 0, 10, 2)) as Offer
       await token.setBalance(offer.address, 300)
+    })
+
+    it('should generate the right name and symbol', async () => {
+      expect(await offer.name()).to.equal('Vested ' + (await token.name()))
+      expect(await offer.symbol()).to.equal('v' + (await token.symbol()))
     })
 
     describe('#claimOffer', () => {
@@ -133,17 +138,7 @@ describe('Offer', function () {
         { account: wallet1, amount: BigNumber.from(200) },
       ])
       const Offer = (await ethers.getContractFactory('Offer')) as Offer__factory
-      offer = (await Offer.deploy(
-        token.address,
-        tree.getHexRoot(),
-        ONE_YEAR,
-        PCT_20,
-        2,
-        10,
-        2,
-        'Vesting',
-        'VST'
-      )) as Offer
+      offer = (await Offer.deploy(token.address, tree.getHexRoot(), ONE_YEAR, PCT_20, 2, 10, 2)) as Offer
       await token.setBalance(offer.address, 300)
     })
 
