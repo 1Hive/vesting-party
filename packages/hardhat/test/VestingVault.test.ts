@@ -19,7 +19,7 @@ const EVENTS = {
   ADDED: 'VestingAdded',
   REVOKED: 'VestingRevoked',
   CLAIMED: 'VestingTokensClaimed',
-  TRANSFERED: 'VestingRecipientTransfered',
+  TRANSFERED: 'VestingBeneficiaryTransfered',
 }
 
 const overrides = {
@@ -110,7 +110,7 @@ describe('TestVestingVault', () => {
 
     it('can get grant recipient', async function () {
       await vault._addTokenVesting(0, otherAddress, 1000)
-      expect(await vault.getVestingRecipient(0)).to.equal(otherAddress)
+      expect(await vault.getVestingBeneficiary(0)).to.equal(otherAddress)
     })
 
     it('can not add a grant if one already exists', async function () {
@@ -126,6 +126,15 @@ describe('TestVestingVault', () => {
 
     it('should have an amount vesting per day greater than zero', async function () {
       await expect(vault._addTokenVesting(0, otherAddress, 9)).to.be.revertedWith(ERRORS.VEST_AMOUNT)
+    })
+
+    it.only('should have no vesting before cliff', async function () {
+      await vault._addTokenVesting(0, otherAddress, 1000)
+      expect((await token.balanceOf(otherAddress)).toString()).to.equal('0')
+
+      await increase(duration.days(1))
+
+      await expect(vault.claimVestedTokens(0)).to.be.revertedWith(ERRORS.NO_VEST)
     })
 
     it('can claim vested tokens', async function () {
@@ -153,7 +162,7 @@ describe('TestVestingVault', () => {
 
       await increase(duration.days(3))
 
-      await expect(vault._transferVestingRecipient(0, ownerAddress))
+      await expect(vault._transferVestingBeneficiary(0, ownerAddress))
         .to.emit(vault, EVENTS.TRANSFERED)
         .withArgs(ownerAddress)
 

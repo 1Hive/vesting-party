@@ -25,7 +25,7 @@ contract TestVestingVault is Ownable {
     ERC20 public token;
 
     struct Vesting {
-        address recipient;
+        address beneficiary;
         uint256 amount;
         uint256 startTime;
         uint16 periodsClaimed;
@@ -34,19 +34,19 @@ contract TestVestingVault is Ownable {
 
     event VestingAdded(
         uint256 indexed tokenId,
-        address indexed recipient,
+        address indexed beneficiary,
         uint256 amount
     );
     event VestingRevoked(
         uint256 indexed tokenId,
-        address indexed recipient,
+        address indexed beneficiary,
         uint256 amountVested
     );
     event VestingTokensClaimed(
-        address indexed recipient,
+        address indexed beneficiary,
         uint256 amountClaimed
     );
-    event VestingRecipientTransfered(address indexed recipient);
+    event VestingBeneficiaryTransfered(address indexed beneficiary);
 
     // unique erc721 token id to token vesting relation
     mapping(uint256 => Vesting) private tokenVestings;
@@ -86,10 +86,10 @@ contract TestVestingVault is Ownable {
         );
 
         require(
-            token.transfer(tokenVesting.recipient, amountVested),
+            token.transfer(tokenVesting.beneficiary, amountVested),
             "no tokens"
         );
-        emit VestingTokensClaimed(tokenVesting.recipient, amountVested);
+        emit VestingTokensClaimed(tokenVesting.beneficiary, amountVested);
     }
 
     function getVestingStartTime(uint256 _tokenId)
@@ -106,23 +106,23 @@ contract TestVestingVault is Ownable {
         return tokenVesting.amount;
     }
 
-    function getVestingRecipient(uint256 _tokenId)
+    function getVestingBeneficiary(uint256 _tokenId)
         public
         view
         returns (address)
     {
         Vesting storage tokenVesting = tokenVestings[_tokenId];
-        return tokenVesting.recipient;
+        return tokenVesting.beneficiary;
     }
 
     /// @notice Add a new token grant for an erc721 token with `_tokenId`.
     /// The amount of tokens here need to be preapproved for transfer by this `Vesting` contract before this call
     /// @param _tokenId Vesting unique erc721 token id
-    /// @param _recipient Address of the token grant recipient entitled to claim the grant funds
+    /// @param _beneficiary Address of the token grant beneficiary entitled to claim the grant funds
     /// @param _amount Total number of tokens in
     function _addTokenVesting(
         uint256 _tokenId,
-        address _recipient,
+        address _beneficiary,
         uint256 _amount
     ) public onlyOwner {
         require(tokenVestings[_tokenId].amount == 0, "Vesting already exists");
@@ -131,7 +131,7 @@ contract TestVestingVault is Ownable {
 
         Vesting memory vesting =
             Vesting({
-                recipient: _recipient,
+                beneficiary: _beneficiary,
                 startTime: currentTime(),
                 amount: _amount,
                 periodsClaimed: 0,
@@ -139,10 +139,10 @@ contract TestVestingVault is Ownable {
             });
 
         tokenVestings[_tokenId] = vesting;
-        emit VestingAdded(_tokenId, _recipient, vesting.amount);
+        emit VestingAdded(_tokenId, _beneficiary, vesting.amount);
     }
 
-    /// @notice Terminate token vesting transferring all vested tokens to the vesting `recipient`
+    /// @notice Terminate token vesting transferring all vested tokens to the vesting `beneficiary`
     /// and returning all non-vested tokens to the contract owner
     /// Secured to the contract owner only
     /// @param _tokenId Vesting unique erc721 token id
@@ -152,30 +152,30 @@ contract TestVestingVault is Ownable {
         (periodsVested, amountVested) = calculateVestingClaim(_tokenId);
 
         Vesting storage tokenVesting = tokenVestings[_tokenId];
-        address recipient = tokenVesting.recipient;
+        address beneficiary = tokenVesting.beneficiary;
 
-        tokenVesting.recipient = address(0);
+        tokenVesting.beneficiary = address(0);
         tokenVesting.startTime = 0;
         tokenVesting.amount = 0;
         tokenVesting.periodsClaimed = 0;
         tokenVesting.totalClaimed = 0;
 
-        require(token.transfer(recipient, amountVested));
+        require(token.transfer(beneficiary, amountVested));
 
-        emit VestingRevoked(_tokenId, recipient, amountVested);
+        emit VestingRevoked(_tokenId, beneficiary, amountVested);
     }
 
-    /// @notice Transfer the recipient of a token grant with `_tokenId`
-    function _transferVestingRecipient(uint256 _tokenId, address _recipient)
+    /// @notice Transfer the beneficiary of a token grant with `_tokenId`
+    function _transferVestingBeneficiary(uint256 _tokenId, address _beneficiary)
         public
         onlyOwner
     {
         claimVestedTokens(_tokenId);
 
         Vesting storage tokenVesting = tokenVestings[_tokenId];
-        tokenVesting.recipient = _recipient;
+        tokenVesting.beneficiary = _beneficiary;
 
-        emit VestingRecipientTransfered(_recipient);
+        emit VestingBeneficiaryTransfered(_beneficiary);
     }
 
     /// @notice Calculate the vested and unclaimed days and tokens available for `_grantId` to claim

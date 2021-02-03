@@ -25,7 +25,7 @@ contract Offer is Ownable, VestingVault, ERC721 {
     uint64 public upfrontVestingPct;
     uint256 public offerEnd;
 
-    event OfferClaimed(uint256 tokenId, address account, uint256 amount);
+    event OfferClaimed(uint256 indexed tokenId);
 
     modifier onlyAfter(uint256 _time) {
         require(now > _time, "Offer: duration not reach.");
@@ -61,22 +61,22 @@ contract Offer is Ownable, VestingVault, ERC721 {
 
     function claimOffer(
         uint256 index,
-        address account,
+        address beneficiary,
         uint256 amount,
         bytes32[] calldata merkleProof
     ) external {
-        // Here we do the proof verification and revert if account can't claim
-        _merkleDistributor.claim(index, account, amount, merkleProof);
+        // Here we do the proof verification and revert if beneficiary can't claim
+        _merkleDistributor.claim(index, beneficiary, amount, merkleProof);
 
         // Mint erc721 token.
         _tokenIds.increment();
         uint256 newItemId = _tokenIds.current();
-        _safeMint(account, newItemId);
+        _safeMint(beneficiary, newItemId);
 
         // Grant vesting tokens.
         _addTokenVesting(
             newItemId,
-            account,
+            beneficiary,
             uint256(amount.mul(PCT_BASE.sub(upfrontVestingPct)).div(PCT_BASE))
         );
 
@@ -84,7 +84,7 @@ contract Offer is Ownable, VestingVault, ERC721 {
         if (upfrontVestingPct != 0) {
             require(
                 token.transfer(
-                    account,
+                    beneficiary,
                     uint256(amount.mul(upfrontVestingPct).div(PCT_BASE))
                 ),
                 "Offer: Transfer failed."
@@ -92,7 +92,7 @@ contract Offer is Ownable, VestingVault, ERC721 {
         }
 
         // TODO consider rename event
-        emit OfferClaimed(newItemId, account, amount);
+        emit OfferClaimed(newItemId);
     }
 
     function transferFrom(
@@ -100,9 +100,9 @@ contract Offer is Ownable, VestingVault, ERC721 {
         address to,
         uint256 tokenId
     ) public override {
-        require(getVestingRecipient(tokenId) == from);
+        require(getVestingBeneficiary(tokenId) == from);
 
-        _transferVestingRecipient(tokenId, to);
+        _transferVestingBeneficiary(tokenId, to);
 
         super.transferFrom(from, to, tokenId);
     }
@@ -113,9 +113,9 @@ contract Offer is Ownable, VestingVault, ERC721 {
         uint256 tokenId,
         bytes memory data
     ) public override {
-        require(getVestingRecipient(tokenId) == from);
+        require(getVestingBeneficiary(tokenId) == from);
 
-        _transferVestingRecipient(tokenId, to);
+        _transferVestingBeneficiary(tokenId, to);
 
         super.safeTransferFrom(from, to, tokenId, data);
     }
