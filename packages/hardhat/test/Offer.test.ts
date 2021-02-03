@@ -68,8 +68,10 @@ describe('Offer', function () {
         const proof0 = tree.getProof(0, wallet0, BigNumber.from(100))
         await expect(offer.claimOffer(0, wallet0, BigNumber.from(100), proof0))
           .to.emit(offer, EVENTS.OFFER_CLAIMED)
-          .withArgs(1, wallet0, BigNumber.from(100).toHexString())
+          .withArgs(1)
 
+        expect(await offer.getVestingBeneficiary(1)).to.equal(wallet0)
+        expect(await offer.getVestingAmount(1)).to.equal(BigNumber.from(100))
         expect(await offer.ownerOf(1)).to.equal(wallet0)
       })
 
@@ -77,10 +79,10 @@ describe('Offer', function () {
         const proof0 = tree.getProof(0, wallet0, BigNumber.from(100))
         await expect(offer.claimOffer(0, wallet0, BigNumber.from(100), proof0))
           .to.emit(offer, EVENTS.OFFER_CLAIMED)
-          .withArgs(1, wallet0, BigNumber.from(100).toHexString())
+          .withArgs(1)
 
         expect(await offer.getVestingAmount(1)).to.equal(100)
-        expect(await offer.getVestingRecipient(1)).to.equal(wallet0)
+        expect(await offer.getVestingBeneficiary(1)).to.equal(wallet0)
         expect(await offer.getVestingStartTime(1)).to.equal(
           (await ethers.provider.getBlock('latest')).timestamp.toString()
         )
@@ -90,7 +92,7 @@ describe('Offer', function () {
         const proof0 = tree.getProof(0, wallet0, BigNumber.from(100))
         await expect(offer.claimOffer(0, wallet0, BigNumber.from(100), proof0))
           .to.emit(offer, EVENTS.OFFER_CLAIMED)
-          .withArgs(1, wallet0, BigNumber.from(100).toHexString())
+          .withArgs(1)
 
         expect((await token.balanceOf(wallet0)).toString()).to.equal('0')
       })
@@ -99,7 +101,7 @@ describe('Offer', function () {
         const proof0 = tree.getProof(0, wallet0, BigNumber.from(100))
         await expect(offer.claimOffer(0, wallet0, BigNumber.from(100), proof0))
           .to.emit(offer, EVENTS.OFFER_CLAIMED)
-          .withArgs(1, wallet0, BigNumber.from(100).toHexString())
+          .withArgs(1)
 
         await expect(offer.claimOffer(0, wallet0, BigNumber.from(100), proof0)).to.be.revertedWith(
           ERRORS.ALREADY_CLAIMED
@@ -150,8 +152,10 @@ describe('Offer', function () {
         const proof0 = tree.getProof(0, wallet0, BigNumber.from(100))
         await expect(offer.claimOffer(0, wallet0, BigNumber.from(100), proof0))
           .to.emit(offer, EVENTS.OFFER_CLAIMED)
-          .withArgs(1, wallet0, 100)
+          .withArgs(1)
 
+        expect(await offer.getVestingBeneficiary(1)).to.equal(wallet0)
+        expect(await offer.getVestingAmount(1)).to.equal(80)
         expect((await token.balanceOf(wallet0)).toString()).to.equal('20')
       })
     })
@@ -161,13 +165,14 @@ describe('Offer', function () {
         const proof0 = tree.getProof(0, wallet0, BigNumber.from(100))
         await expect(offer.claimOffer(0, wallet0, BigNumber.from(100), proof0))
           .to.emit(offer, EVENTS.OFFER_CLAIMED)
-          .withArgs(1, wallet0, 100)
+          .withArgs(1)
         expect((await token.balanceOf(wallet0)).toString()).to.equal('20')
 
         await increase(duration.weeks(10))
 
-        await expect(offer.claimVestedTokens(1)).to.emit(offer, EVENTS.TOKENS_CLAIMED).withArgs(wallet0, 16)
+        await expect(offer.claimVestedTokens(1)).to.emit(offer, EVENTS.TOKENS_CLAIMED).withArgs(1, 16)
 
+        expect(await offer.getVestingBeneficiary(1)).to.equal(wallet0)
         expect((await token.balanceOf(wallet0)).toString()).to.equal('36')
       })
     })
@@ -177,7 +182,7 @@ describe('Offer', function () {
         const proof0 = tree.getProof(0, wallet0, BigNumber.from(100))
         await expect(offer.claimOffer(0, wallet0, BigNumber.from(100), proof0))
           .to.emit(offer, EVENTS.OFFER_CLAIMED)
-          .withArgs(1, wallet0, 100)
+          .withArgs(1)
         expect(await offer.ownerOf(1)).to.equal(wallet0)
         expect((await token.balanceOf(wallet1)).toString()).to.equal('0')
         expect((await token.balanceOf(wallet0)).toString()).to.equal('20')
@@ -194,8 +199,9 @@ describe('Offer', function () {
 
         await increase(duration.weeks(10))
 
-        await expect(offer.claimVestedTokens(1)).to.emit(offer, EVENTS.TOKENS_CLAIMED).withArgs(wallet1, 16)
+        await expect(offer.claimVestedTokens(1)).to.emit(offer, EVENTS.TOKENS_CLAIMED).withArgs(1, 16)
 
+        expect(await offer.getVestingBeneficiary(1)).to.equal(wallet1)
         expect((await token.balanceOf(wallet1)).toString()).to.equal('16')
       })
     })
@@ -205,7 +211,7 @@ describe('Offer', function () {
         const proof0 = tree.getProof(0, wallet0, BigNumber.from(100))
         await expect(offer.claimOffer(0, wallet0, BigNumber.from(100), proof0))
           .to.emit(offer, EVENTS.OFFER_CLAIMED)
-          .withArgs(1, wallet0, 100)
+          .withArgs(1)
         expect(await offer.ownerOf(1)).to.equal(wallet0)
         expect((await token.balanceOf(wallet1)).toString()).to.equal('0')
         expect((await token.balanceOf(wallet0)).toString()).to.equal('20')
@@ -222,8 +228,9 @@ describe('Offer', function () {
 
         await increase(duration.weeks(10))
 
-        await expect(offer.claimVestedTokens(1)).to.emit(offer, EVENTS.TOKENS_CLAIMED).withArgs(wallet1, 16)
+        await expect(offer.claimVestedTokens(1)).to.emit(offer, EVENTS.TOKENS_CLAIMED).withArgs(1, 16)
 
+        expect(await offer.getVestingBeneficiary(1)).to.equal(wallet1)
         expect((await token.balanceOf(wallet1)).toString()).to.equal('16')
       })
 
@@ -231,7 +238,7 @@ describe('Offer', function () {
         const proof0 = tree.getProof(0, wallet0, BigNumber.from(100))
         await expect(offer.claimOffer(0, wallet0, BigNumber.from(100), proof0))
           .to.emit(offer, EVENTS.OFFER_CLAIMED)
-          .withArgs(1, wallet0, 100)
+          .withArgs(1)
         expect(await offer.ownerOf(1)).to.equal(wallet0)
         expect((await token.balanceOf(wallet1)).toString()).to.equal('0')
         expect((await token.balanceOf(wallet0)).toString()).to.equal('20')
@@ -248,8 +255,9 @@ describe('Offer', function () {
 
         await increase(duration.weeks(10))
 
-        await expect(offer.claimVestedTokens(1)).to.emit(offer, EVENTS.TOKENS_CLAIMED).withArgs(wallet1, 16)
+        await expect(offer.claimVestedTokens(1)).to.emit(offer, EVENTS.TOKENS_CLAIMED).withArgs(1, 16)
 
+        expect(await offer.getVestingBeneficiary(1)).to.equal(wallet1)
         expect((await token.balanceOf(wallet1)).toString()).to.equal('16')
       })
     })
