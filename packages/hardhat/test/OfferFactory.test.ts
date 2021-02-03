@@ -10,8 +10,6 @@ const overrides = {
   gasLimit: 9500000,
 }
 
-const GAS_TARGET = 3e6
-
 describe('Offer Factory', function () {
   let signers: SignerWithAddress[]
 
@@ -37,6 +35,7 @@ describe('Offer Factory', function () {
     offerFactory = await OfferFactory.deploy()
   })
 
+  const GAS_TARGET = !process.env.SOLIDITY_COVERAGE ? 3e6 : 20e6
   it(`deploys offer under ${GAS_TARGET} gas`, async () => {
     const tx = offerFactory.createOffer(token.address, tree.getHexRoot(), duration.years(1), 0, 0, 10, 2)
 
