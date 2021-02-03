@@ -34,7 +34,6 @@ export function handleCreateOffer(call: CreateOfferCall): void {
   offer.vestingDurationInPeriods = call.inputs._vestingDurationInPeriods;
   offer.vestingCliffInPeriods = call.inputs._vestingCliffInPeriods;
 
-  // save to the store
   factory.save();
   offer.save();
 
@@ -85,9 +84,7 @@ export function handleVestingTokensClaimed(event: VestingTokensClaimed): void {
   claim.vesting = vesting.id;
   claim.createdAt = event.block.timestamp;
   claim.amount = event.params.amountVested;
-  claim.beneficiary = offerContract.getVestingPeriodsClaimed(
-    event.params.tokenId
-  );
+  claim.beneficiary = offerContract.getVestingBeneficiary(event.params.tokenId);
 
   vesting.save();
   claim.save();
@@ -153,19 +150,19 @@ function buildERC20(address: Address): string {
   return token.id;
 }
 
-function buildVestingId(vesting: Address, tokenId: BigInt): string {
-  return vesting.toHexString() + "-nft-" + tokenId.toString();
+function buildVestingId(offer: Address, tokenId: BigInt): string {
+  return offer.toHexString() + "-nft-" + tokenId.toString();
 }
 
 function buildClaimId(
-  vesting: Address,
+  offer: Address,
   tokenId: BigInt,
   logIndex: string
 ): string {
-  return vesting.toHexString() + "-nft-" + tokenId.toString() + "-" + logIndex;
+  return offer.toHexString() + "-nft-" + tokenId.toString() + "-" + logIndex;
 }
 
-function castPeriodUnit(state: Number): string {
+function castPeriodUnit(state: i32): string {
   switch (state) {
     case 0:
       return "Day";

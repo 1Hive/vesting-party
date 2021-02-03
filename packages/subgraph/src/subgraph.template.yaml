@@ -18,7 +18,6 @@ templates:
         - Vesting
         - Claim
         - ERC20
-        - ERC721
       abis:
         - name: Offer
           file: $HARDHAT_PACKAGE/abis/contracts/Offer.sol/Offer.json

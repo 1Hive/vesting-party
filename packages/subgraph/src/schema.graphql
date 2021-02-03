@@ -2,13 +2,14 @@ type OfferFactory @entity {
   id: ID!
   address: Bytes!
   count: Int!
-  offers: [Offer!]
+  offers: [Offer!] @derivedFrom(field: "factory")
 }
 
 type Offer @entity {
   id: ID!
   address: Bytes!
   createdAt: BigInt!
+  factory: OfferFactory!
   name: String!
   symbol: String!
   token: ERC20!
