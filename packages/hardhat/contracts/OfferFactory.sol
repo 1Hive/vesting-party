@@ -11,9 +11,7 @@ contract OfferFactory {
         uint64 _upfrontVestingPct,
         uint8 _vestingPeriodUnit,
         uint16 _vestingDurationInPeriods,
-        uint16 _vestingCliffInPeriods,
-        string memory _erc721Name,
-        string memory _erc721Symbol
+        uint16 _vestingCliffInPeriods
     ) public returns (Offer offer) {
         return
             new Offer(
@@ -23,9 +21,7 @@ contract OfferFactory {
                 _upfrontVestingPct,
                 _vestingPeriodUnit,
                 _vestingDurationInPeriods,
-                _vestingCliffInPeriods,
-                _erc721Name,
-                _erc721Symbol
+                _vestingCliffInPeriods
             );
     }
 }

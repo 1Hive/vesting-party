@@ -166,29 +166,6 @@ contract VestingVault {
         emit VestingBeneficiaryTransfered(_tokenId);
     }
 
-    /// @notice Terminate token vesting transferring all vested tokens to the vesting `beneficiary`
-    /// and returning all non-vested tokens to the contract owner
-    /// Secured to the contract owner only
-    /// @param _tokenId Vesting unique erc721 token id
-    function _revokeTokenVesting(uint256 _tokenId) internal {
-        uint16 periodsVested;
-        uint256 amountVested;
-        (periodsVested, amountVested) = calculateVestingClaim(_tokenId);
-
-        Vesting storage tokenVesting = tokenVestings[_tokenId];
-        address beneficiary = tokenVesting.beneficiary;
-
-        tokenVesting.beneficiary = address(0);
-        tokenVesting.startTime = 0;
-        tokenVesting.amount = 0;
-        tokenVesting.periodsClaimed = 0;
-        tokenVesting.amountClaimed = 0;
-
-        require(token.transfer(beneficiary, amountVested));
-
-        emit VestingRevoked(_tokenId, beneficiary, amountVested);
-    }
-
     /// @notice Calculate the vested and unclaimed days and tokens available for `_grantId` to claim
     /// Due to rounding errors once grant duration is reached, returns the entire left grant amount
     /// Returns (0, 0) if cliff has not been reached

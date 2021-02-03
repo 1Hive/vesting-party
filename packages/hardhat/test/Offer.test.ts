@@ -7,6 +7,7 @@ import { Offer, Offer__factory, TestERC20, TestERC20__factory } from '../typecha
 
 const ERRORS = {
   INVALID_PROOF: 'MerkleDistributor: Invalid proof.',
+  NO_VEST: 'Vested is 0',
   RUNNING: 'Offer: duration not reach.',
   NOT_OWNER: 'Ownable: caller is not the owner',
   ALREADY_CLAIMED: 'MerkleDistributor: Drop already claimed.',
@@ -59,8 +60,13 @@ describe('Offer', function () {
         { account: wallet1, amount: BigNumber.from(200) },
       ])
       const Offer = (await ethers.getContractFactory('Offer')) as Offer__factory
-      offer = (await Offer.deploy(token.address, tree.getHexRoot(), ONE_YEAR, 0, 0, 10, 2, 'Vesting', 'VST')) as Offer
+      offer = (await Offer.deploy(token.address, tree.getHexRoot(), ONE_YEAR, 0, 0, 10, 2)) as Offer
       await token.setBalance(offer.address, 300)
+    })
+
+    it('should generate the right name and symbol', async () => {
+      expect(await offer.name()).to.equal('Vested ' + (await token.name()))
+      expect(await offer.symbol()).to.equal('v' + (await token.symbol()))
     })
 
     describe('#claimOffer', () => {
@@ -97,6 +103,18 @@ describe('Offer', function () {
         expect((await token.balanceOf(wallet0)).toString()).to.equal('0')
       })
 
+      it('should not sent vested tokens before cliff', async () => {
+        const proof0 = tree.getProof(0, wallet0, BigNumber.from(100))
+        await expect(offer.claimOffer(0, wallet0, BigNumber.from(100), proof0))
+          .to.emit(offer, EVENTS.OFFER_CLAIMED)
+          .withArgs(1)
+
+        await increase(duration.days(1))
+
+        await expect(offer.claimVestedTokens(1)).to.be.revertedWith(ERRORS.NO_VEST)
+        expect((await token.balanceOf(wallet0)).toString()).to.equal('0')
+      })
+
       it('should not allow to claim twice', async () => {
         const proof0 = tree.getProof(0, wallet0, BigNumber.from(100))
         await expect(offer.claimOffer(0, wallet0, BigNumber.from(100), proof0))
@@ -106,6 +124,18 @@ describe('Offer', function () {
         await expect(offer.claimOffer(0, wallet0, BigNumber.from(100), proof0)).to.be.revertedWith(
           ERRORS.ALREADY_CLAIMED
         )
+      })
+
+      it('should vest all tokens after vesting end', async () => {
+        const proof0 = tree.getProof(0, wallet0, BigNumber.from(100))
+        await expect(offer.claimOffer(0, wallet0, BigNumber.from(100), proof0))
+          .to.emit(offer, EVENTS.OFFER_CLAIMED)
+          .withArgs(1)
+
+        await increase(duration.days(11))
+
+        await expect(offer.claimVestedTokens(1)).to.emit(offer, EVENTS.TOKENS_CLAIMED).withArgs(1, 100)
+        expect((await token.balanceOf(wallet0)).toString()).to.equal('100')
       })
     })
 
@@ -133,17 +163,7 @@ describe('Offer', function () {
         { account: wallet1, amount: BigNumber.from(200) },
       ])
       const Offer = (await ethers.getContractFactory('Offer')) as Offer__factory
-      offer = (await Offer.deploy(
-        token.address,
-        tree.getHexRoot(),
-        ONE_YEAR,
-        PCT_20,
-        2,
-        10,
-        2,
-        'Vesting',
-        'VST'
-      )) as Offer
+      offer = (await Offer.deploy(token.address, tree.getHexRoot(), ONE_YEAR, PCT_20, 2, 10, 2)) as Offer
       await token.setBalance(offer.address, 300)
     })
 

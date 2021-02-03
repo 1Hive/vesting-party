@@ -74,18 +74,8 @@ describe('TestVestingVault', () => {
       await expect(vault.connect(other)._addTokenVesting(0, otherAddress, 10)).to.be.revertedWith(ERRORS.OWNER)
     })
 
-    it('should only allow owner to revoke', async function () {
-      await vault._addTokenVesting(0, otherAddress, 10)
-      await expect(vault.connect(other)._revokeTokenVesting(0)).to.be.revertedWith(ERRORS.OWNER)
-    })
-
     it('should emit an event on grant', async function () {
       await expect(vault._addTokenVesting(0, otherAddress, 10)).to.emit(vault, EVENTS.ADDED).withArgs(0)
-    })
-
-    it('should emit an event on revoke', async function () {
-      await vault._addTokenVesting(0, otherAddress, 10)
-      await expect(vault._revokeTokenVesting(0)).to.emit(vault, EVENTS.REVOKED).withArgs(0, otherAddress, 0)
     })
 
     it('should emit an event on claim', async function () {
@@ -174,18 +164,6 @@ describe('TestVestingVault', () => {
       expect((await token.balanceOf(otherAddress)).toString()).to.equal('300')
       expect((await token.balanceOf(ownerAddress)).toString()).to.equal('200')
       expect((await token.balanceOf(vault.address)).toString()).to.equal('500')
-    })
-
-    it('owner can revoke token grant', async function () {
-      await vault._addTokenVesting(0, otherAddress, 1000)
-      expect((await token.balanceOf(vault.address)).toString()).to.equal('1000')
-
-      await increase(duration.days(3))
-
-      // Revoke claim vested tokens for the elapsed days
-      await vault._revokeTokenVesting(0)
-      expect((await token.balanceOf(otherAddress)).toString()).to.equal('300')
-      expect((await token.balanceOf(vault.address)).toString()).to.equal('700')
     })
   })
 
