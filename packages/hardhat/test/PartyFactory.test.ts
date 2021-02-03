@@ -40,7 +40,7 @@ describe('Party Factory', function () {
   })
 
   it(`should deploy correctly`, async () => {
-    await expect(partyFactory.createParty(token.address, tree.getHexRoot(), duration.years(1), 0, 0, 10, 2)).to.emit(
+    await expect(partyFactory.startParty(token.address, tree.getHexRoot(), duration.years(1), 0, 0, 10, 2)).to.emit(
       partyFactory,
       EVENTS.NEW_OFFER
     )
@@ -48,7 +48,7 @@ describe('Party Factory', function () {
 
   const GAS_TARGET = !process.env.SOLIDITY_COVERAGE ? 6.5e6 : 3e6
   it(`deploys party under ${GAS_TARGET} gas`, async () => {
-    const tx = partyFactory.createParty(token.address, tree.getHexRoot(), duration.years(1), 0, 0, 10, 2)
+    const tx = partyFactory.startParty(token.address, tree.getHexRoot(), duration.years(1), 0, 0, 10, 2)
 
     await expect(tx).to.not.reverted
 

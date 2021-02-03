@@ -50,7 +50,7 @@
         "type": "uint16"
       }
     ],
-    "name": "createParty",
+    "name": "startParty",
     "outputs": [
       {
         "internalType": "contract Party",

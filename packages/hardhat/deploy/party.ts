@@ -26,10 +26,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const PCT_10 = `10${'00'.repeat(8)}`
 
-  const recipt = await execute(
-    'OfferFactory',
+  await execute(
+    'PartyFactory',
     { from: deployer, log: true },
-    'createOffer',
+    'startParty',
     token.address,
     tree.getHexRoot(),
     duration.years(1),
@@ -41,4 +41,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 }
 
 export default func
-func.dependencies = ['OfferFactory']
+func.dependencies = ['PartyFactory']

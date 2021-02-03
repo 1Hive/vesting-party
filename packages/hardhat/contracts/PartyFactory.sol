@@ -6,7 +6,7 @@ import "./Party.sol";
 contract PartyFactory {
     event NewParty(address party);
 
-    function createParty(
+    function startParty(
         address _token,
         bytes32 _merkleRoot,
         uint256 _partyDuration,
