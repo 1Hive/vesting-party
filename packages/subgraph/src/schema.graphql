@@ -23,7 +23,13 @@ type Offer @entity {
 
 type Vesting @entity {
   id: ID!
+  tokenId: BigInt!
   offer: Offer!
+  startTime: BigInt!
+  recipient: Bytes!
+  amount: BigInt!
+  periodsClaimed: Int!
+  amountClaimed: BigInt!
   claims: [Claim!] @derivedFrom(field: "vesting")
 }
 

@@ -6,6 +6,7 @@ import {
   VestingAdded,
   VestingRecipientTransfered,
   VestingTokensClaimed,
+  Offer as OfferContract,
 } from "../generated/templates/Offer/Offer";
 import {
   Offer,
@@ -41,16 +42,65 @@ export function handleCreateOffer(call: CreateOfferCall): void {
 }
 
 export function handleOfferClaimed(event: OfferClaimed): void {
-  const vesting = buildVestingId(event.address, event.params.tokenId);
+  const vestingId = buildVestingId(event.address, event.params.tokenId);
+  const vesting = loadOrCreateVesting(vestingId);
+
+  const offerContract = OfferContract.bind(event.address);
+
+  vesting.tokenId = event.params.tokenId;
+  vesting.offer = event.address.toHex();
+  vesting.startTime = event.block.timestamp;
+  vesting.recipient = offerContract.getVestingRecipient(event.params.tokenId);
+  vesting.amount = offerContract.getVestingAmount(event.params.tokenId);
+  vesting.periodsClaimed = 0;
+  vesting.amountClaimed = BigInt.fromI32(0);
+
+  vesting.save();
+}
+
+export function handleVestingTokensClaimed(event: VestingTokensClaimed): void {
+  const vestingId = buildVestingId(event.address, event.params.tokenId);
+  const vesting = loadOrCreateVesting(vestingId);
+
+  vesting.vesting.save();
+}
+
+export function handleVestingRecipientTransfered(
+  event: VestingRecipientTransfered
+): void {
+  const vestingId = buildVestingId(event.address, event.params.tokenId);
+  const vesting = loadOrCreateVesting(vestingId);
+
+  const offerContract = OfferContract.bind(event.address);
+
+  vesting.periodsClaimed = offerContract.getVestingPeriodsClaimed(
+    event.params.tokenId
+  );
+  vesting.amountClaimed = offerContract.getVestingAmountClaimed(
+    event.params.tokenId
+  );
+
+  vesting.save();
 }
 
 export function handleVestingAdded(event: VestingAdded): void {}
 
-export function handleVestingRecipientTransfered(
-  event: VestingRecipientTransfered
-): void {}
+function loadOrCreateVesting(vestingId: string): Vesting {
+  let vesting = Vesting.load(vestingId);
+  if (vesting === null) {
+    vesting = new Vesting(vestingId);
+  }
+  return vesting!;
+}
 
-export function handleVestingTokensClaimed(event: VestingTokensClaimed): void {}
+function loadOrCreateOffer(address: Address): Offer {
+  let offer = Offer.load(address.toHex());
+  if (offer === null) {
+    offer = new Offer(address.toHex());
+    offer.address = address;
+  }
+  return offer!;
+}
 
 function loadOrCreateFactory(address: Address): OfferFactory {
   let factory = OfferFactory.load("1");
@@ -63,16 +113,7 @@ function loadOrCreateFactory(address: Address): OfferFactory {
   return factory!;
 }
 
-export function loadOrCreateOffer(address: Address): Offer {
-  let offer = Offer.load(address.toHex());
-  if (offer === null) {
-    offer = new Offer(address.toHex());
-    offer.address = address;
-  }
-  return offer!;
-}
-
-export function buildERC20(address: Address): string {
+function buildERC20(address: Address): string {
   const id = address.toHexString();
   let token = ERC20.load(id);
 
@@ -88,7 +129,7 @@ export function buildERC20(address: Address): string {
   return token.id;
 }
 
-export function buildVestingId(vesting: Address, tokenId: BigInt): string {
+function buildVestingId(vesting: Address, tokenId: BigInt): string {
   return vesting.toHexString() + "-nft-" + tokenId.toString();
 }
 
