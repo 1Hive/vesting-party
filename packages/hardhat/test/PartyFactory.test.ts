@@ -4,22 +4,22 @@ import { BigNumber } from 'ethers'
 import { ethers, waffle } from 'hardhat'
 import BalanceTree from '../src/balance-tree'
 import { duration } from '../src/rpc'
-import { OfferFactory, OfferFactory__factory, TestERC20, TestERC20__factory } from '../typechain'
+import { PartyFactory, PartyFactory__factory, TestERC20, TestERC20__factory } from '../typechain'
 
 const EVENTS = {
-  NEW_OFFER: 'NewOffer',
+  NEW_OFFER: 'NewParty',
 }
 
 const overrides = {
   gasLimit: 9500000,
 }
 
-describe('Offer Factory', function () {
+describe('Party Factory', function () {
   let signers: SignerWithAddress[]
 
   let token: TestERC20
   let tree: BalanceTree
-  let offerFactory: OfferFactory
+  let partyFactory: PartyFactory
 
   before(async () => {
     signers = await ethers.getSigners()
@@ -34,21 +34,21 @@ describe('Offer Factory', function () {
   })
 
   beforeEach(async () => {
-    const OfferFactory = (await ethers.getContractFactory('OfferFactory')) as OfferFactory__factory
+    const PartyFactory = (await ethers.getContractFactory('PartyFactory')) as PartyFactory__factory
 
-    offerFactory = await OfferFactory.deploy()
+    partyFactory = await PartyFactory.deploy()
   })
 
   it(`should deploy correctly`, async () => {
-    await expect(offerFactory.createOffer(token.address, tree.getHexRoot(), duration.years(1), 0, 0, 10, 2)).to.emit(
-      offerFactory,
+    await expect(partyFactory.createParty(token.address, tree.getHexRoot(), duration.years(1), 0, 0, 10, 2)).to.emit(
+      partyFactory,
       EVENTS.NEW_OFFER
     )
   })
 
   const GAS_TARGET = !process.env.SOLIDITY_COVERAGE ? 6.5e6 : 3e6
-  it(`deploys offer under ${GAS_TARGET} gas`, async () => {
-    const tx = offerFactory.createOffer(token.address, tree.getHexRoot(), duration.years(1), 0, 0, 10, 2)
+  it(`deploys party under ${GAS_TARGET} gas`, async () => {
+    const tx = partyFactory.createParty(token.address, tree.getHexRoot(), duration.years(1), 0, 0, 10, 2)
 
     await expect(tx).to.not.reverted
 

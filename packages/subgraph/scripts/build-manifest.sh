@@ -17,8 +17,8 @@ echo 'Generating manifest from data file: '$DATA
 cat $DATA
 
 mustache \
-  -p manifest/templates/sources/OfferFactory.yaml \
-  -p manifest/templates/contracts/OfferFactory.template.yaml \
+  -p manifest/templates/sources/PartyFactory.yaml \
+  -p manifest/templates/contracts/PartyFactory.template.yaml \
   $DATA \
   src/subgraph.template.yaml \
   | sed -e "s#\$HARDHAT_PACKAGE#$HARDHAT_PACKAGE#g" > subgraph.yaml

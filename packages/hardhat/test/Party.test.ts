@@ -3,18 +3,18 @@ import { BigNumber, Signer } from 'ethers'
 import { ethers } from 'hardhat'
 import { takeSnapshot, restoreSnapshot, increase, duration } from '../src/rpc'
 import BalanceTree from '../src/balance-tree'
-import { Offer, Offer__factory, TestERC20, TestERC20__factory } from '../typechain'
+import { Party, Party__factory, TestERC20, TestERC20__factory } from '../typechain'
 
 const ERRORS = {
   INVALID_PROOF: 'MerkleDistributor: Invalid proof.',
   NO_VEST: 'Vested is 0',
-  RUNNING: 'Offer: duration not reach.',
+  RUNNING: 'Party: duration not reach.',
   NOT_OWNER: 'Ownable: caller is not the owner',
   ALREADY_CLAIMED: 'MerkleDistributor: Drop already claimed.',
 }
 
 const EVENTS = {
-  OFFER_CLAIMED: 'OfferClaimed',
+  OFFER_CLAIMED: 'PartyJoined',
   TOKENS_CLAIMED: 'VestingTokensClaimed',
   TRANSFER: 'Transfer',
 }
@@ -27,13 +27,13 @@ const overrides = {
   gasLimit: 9500000,
 }
 
-describe('Offer', function () {
+describe('Party', function () {
   let signers: Signer[], wallet0: string, wallet1: string
 
   let snapshotId
 
   let token: TestERC20
-  let offer: Offer
+  let party: Party
   let tree: BalanceTree
 
   before(async () => {
@@ -53,51 +53,51 @@ describe('Offer', function () {
     await restoreSnapshot(snapshotId)
   })
 
-  describe('Offer config #1', function () {
+  describe('Party config #1', function () {
     beforeEach('deploy', async () => {
       tree = new BalanceTree([
         { account: wallet0, amount: BigNumber.from(100) },
         { account: wallet1, amount: BigNumber.from(200) },
       ])
-      const Offer = (await ethers.getContractFactory('Offer')) as Offer__factory
-      offer = (await Offer.deploy(token.address, tree.getHexRoot(), ONE_YEAR, 0, 0, 10, 2)) as Offer
-      await token.setBalance(offer.address, 300)
+      const Party = (await ethers.getContractFactory('Party')) as Party__factory
+      party = (await Party.deploy(token.address, tree.getHexRoot(), ONE_YEAR, 0, 0, 10, 2)) as Party
+      await token.setBalance(party.address, 300)
     })
 
     it('should generate the right name and symbol', async () => {
-      expect(await offer.name()).to.equal('Vested ' + (await token.name()))
-      expect(await offer.symbol()).to.equal('v' + (await token.symbol()))
+      expect(await party.name()).to.equal('Vested ' + (await token.name()))
+      expect(await party.symbol()).to.equal('v' + (await token.symbol()))
     })
 
-    describe('#claimOffer', () => {
+    describe('#claimParty', () => {
       it('should mint an erc721 to account', async () => {
         const proof0 = tree.getProof(0, wallet0, BigNumber.from(100))
-        await expect(offer.claimOffer(0, wallet0, BigNumber.from(100), proof0))
-          .to.emit(offer, EVENTS.OFFER_CLAIMED)
+        await expect(party.joinParty(0, wallet0, BigNumber.from(100), proof0))
+          .to.emit(party, EVENTS.OFFER_CLAIMED)
           .withArgs(1)
 
-        expect(await offer.getVestingBeneficiary(1)).to.equal(wallet0)
-        expect(await offer.getVestingAmount(1)).to.equal(BigNumber.from(100))
-        expect(await offer.ownerOf(1)).to.equal(wallet0)
+        expect(await party.getVestingBeneficiary(1)).to.equal(wallet0)
+        expect(await party.getVestingAmount(1)).to.equal(BigNumber.from(100))
+        expect(await party.ownerOf(1)).to.equal(wallet0)
       })
 
       it('should add vesting correctly', async () => {
         const proof0 = tree.getProof(0, wallet0, BigNumber.from(100))
-        await expect(offer.claimOffer(0, wallet0, BigNumber.from(100), proof0))
-          .to.emit(offer, EVENTS.OFFER_CLAIMED)
+        await expect(party.joinParty(0, wallet0, BigNumber.from(100), proof0))
+          .to.emit(party, EVENTS.OFFER_CLAIMED)
           .withArgs(1)
 
-        expect(await offer.getVestingAmount(1)).to.equal(100)
-        expect(await offer.getVestingBeneficiary(1)).to.equal(wallet0)
-        expect(await offer.getVestingStartTime(1)).to.equal(
+        expect(await party.getVestingAmount(1)).to.equal(100)
+        expect(await party.getVestingBeneficiary(1)).to.equal(wallet0)
+        expect(await party.getVestingStartTime(1)).to.equal(
           (await ethers.provider.getBlock('latest')).timestamp.toString()
         )
       })
 
       it('should not upfront vested tokens', async () => {
         const proof0 = tree.getProof(0, wallet0, BigNumber.from(100))
-        await expect(offer.claimOffer(0, wallet0, BigNumber.from(100), proof0))
-          .to.emit(offer, EVENTS.OFFER_CLAIMED)
+        await expect(party.joinParty(0, wallet0, BigNumber.from(100), proof0))
+          .to.emit(party, EVENTS.OFFER_CLAIMED)
           .withArgs(1)
 
         expect((await token.balanceOf(wallet0)).toString()).to.equal('0')
@@ -105,77 +105,77 @@ describe('Offer', function () {
 
       it('should not sent vested tokens before cliff', async () => {
         const proof0 = tree.getProof(0, wallet0, BigNumber.from(100))
-        await expect(offer.claimOffer(0, wallet0, BigNumber.from(100), proof0))
-          .to.emit(offer, EVENTS.OFFER_CLAIMED)
+        await expect(party.joinParty(0, wallet0, BigNumber.from(100), proof0))
+          .to.emit(party, EVENTS.OFFER_CLAIMED)
           .withArgs(1)
 
         await increase(duration.days(1))
 
-        await expect(offer.claimVestedTokens(1)).to.be.revertedWith(ERRORS.NO_VEST)
+        await expect(party.claimVestedTokens(1)).to.be.revertedWith(ERRORS.NO_VEST)
         expect((await token.balanceOf(wallet0)).toString()).to.equal('0')
       })
 
       it('should not allow to claim twice', async () => {
         const proof0 = tree.getProof(0, wallet0, BigNumber.from(100))
-        await expect(offer.claimOffer(0, wallet0, BigNumber.from(100), proof0))
-          .to.emit(offer, EVENTS.OFFER_CLAIMED)
+        await expect(party.joinParty(0, wallet0, BigNumber.from(100), proof0))
+          .to.emit(party, EVENTS.OFFER_CLAIMED)
           .withArgs(1)
 
-        await expect(offer.claimOffer(0, wallet0, BigNumber.from(100), proof0)).to.be.revertedWith(
+        await expect(party.joinParty(0, wallet0, BigNumber.from(100), proof0)).to.be.revertedWith(
           ERRORS.ALREADY_CLAIMED
         )
       })
 
       it('should vest all tokens after vesting end', async () => {
         const proof0 = tree.getProof(0, wallet0, BigNumber.from(100))
-        await expect(offer.claimOffer(0, wallet0, BigNumber.from(100), proof0))
-          .to.emit(offer, EVENTS.OFFER_CLAIMED)
+        await expect(party.joinParty(0, wallet0, BigNumber.from(100), proof0))
+          .to.emit(party, EVENTS.OFFER_CLAIMED)
           .withArgs(1)
 
         await increase(duration.days(11))
 
-        await expect(offer.claimVestedTokens(1)).to.emit(offer, EVENTS.TOKENS_CLAIMED).withArgs(1, 100)
+        await expect(party.claimVestedTokens(1)).to.emit(party, EVENTS.TOKENS_CLAIMED).withArgs(1, 100)
         expect((await token.balanceOf(wallet0)).toString()).to.equal('100')
       })
     })
 
     describe('#withdrawTokens', () => {
-      it('should not allow withdraw tokens before offerEnd', async () => {
-        await expect(offer.withdrawTokens(wallet0)).to.be.reverted
+      it('should not allow withdraw tokens before partyEnd', async () => {
+        await expect(party.withdrawTokens(wallet0)).to.be.reverted
       })
       it('should not allow allow other account to withdraw', async () => {
         await increase(duration.years(2))
-        await expect(offer.connect(signers[1]).withdrawTokens(wallet0)).to.be.revertedWith(ERRORS.NOT_OWNER)
+        await expect(party.connect(signers[1]).withdrawTokens(wallet0)).to.be.revertedWith(ERRORS.NOT_OWNER)
       })
 
-      it('should allow withdraw tokens after offerEnd', async () => {
+      it('should allow withdraw tokens after partyEnd', async () => {
         await increase(duration.years(2))
-        await offer.withdrawTokens(wallet0)
+        await party.withdrawTokens(wallet0)
         expect((await token.balanceOf(wallet0)).toString()).to.equal('300')
       })
     })
   })
 
-  describe('Offer config #2', function () {
+  describe('Party config #2', function () {
     beforeEach('deploy', async () => {
       tree = new BalanceTree([
         { account: wallet0, amount: BigNumber.from(100) },
         { account: wallet1, amount: BigNumber.from(200) },
       ])
-      const Offer = (await ethers.getContractFactory('Offer')) as Offer__factory
-      offer = (await Offer.deploy(token.address, tree.getHexRoot(), ONE_YEAR, PCT_20, 2, 10, 2)) as Offer
-      await token.setBalance(offer.address, 300)
+      const Party = (await ethers.getContractFactory('Party')) as Party__factory
+      party = (await Party.deploy(token.address, tree.getHexRoot(), ONE_YEAR, PCT_20, 2, 10, 2)) as Party
+      await token.setBalance(party.address, 300)
     })
 
-    describe('#claimOffer', () => {
+    describe('#claimParty', () => {
       it('should upfront 20% of tokens', async () => {
         const proof0 = tree.getProof(0, wallet0, BigNumber.from(100))
-        await expect(offer.claimOffer(0, wallet0, BigNumber.from(100), proof0))
-          .to.emit(offer, EVENTS.OFFER_CLAIMED)
+        await expect(party.joinParty(0, wallet0, BigNumber.from(100), proof0))
+          .to.emit(party, EVENTS.OFFER_CLAIMED)
           .withArgs(1)
 
-        expect(await offer.getVestingBeneficiary(1)).to.equal(wallet0)
-        expect(await offer.getVestingAmount(1)).to.equal(80)
+        expect(await party.getVestingBeneficiary(1)).to.equal(wallet0)
+        expect(await party.getVestingAmount(1)).to.equal(80)
         expect((await token.balanceOf(wallet0)).toString()).to.equal('20')
       })
     })
@@ -183,16 +183,16 @@ describe('Offer', function () {
     describe('#claimVestedTokens', () => {
       it('should vest tokens correctly', async () => {
         const proof0 = tree.getProof(0, wallet0, BigNumber.from(100))
-        await expect(offer.claimOffer(0, wallet0, BigNumber.from(100), proof0))
-          .to.emit(offer, EVENTS.OFFER_CLAIMED)
+        await expect(party.joinParty(0, wallet0, BigNumber.from(100), proof0))
+          .to.emit(party, EVENTS.OFFER_CLAIMED)
           .withArgs(1)
         expect((await token.balanceOf(wallet0)).toString()).to.equal('20')
 
         await increase(duration.weeks(10))
 
-        await expect(offer.claimVestedTokens(1)).to.emit(offer, EVENTS.TOKENS_CLAIMED).withArgs(1, 16)
+        await expect(party.claimVestedTokens(1)).to.emit(party, EVENTS.TOKENS_CLAIMED).withArgs(1, 16)
 
-        expect(await offer.getVestingBeneficiary(1)).to.equal(wallet0)
+        expect(await party.getVestingBeneficiary(1)).to.equal(wallet0)
         expect((await token.balanceOf(wallet0)).toString()).to.equal('36')
       })
     })
@@ -200,28 +200,28 @@ describe('Offer', function () {
     describe('#transferFrom', () => {
       it('should update vesting recipient on transfer', async () => {
         const proof0 = tree.getProof(0, wallet0, BigNumber.from(100))
-        await expect(offer.claimOffer(0, wallet0, BigNumber.from(100), proof0))
-          .to.emit(offer, EVENTS.OFFER_CLAIMED)
+        await expect(party.joinParty(0, wallet0, BigNumber.from(100), proof0))
+          .to.emit(party, EVENTS.OFFER_CLAIMED)
           .withArgs(1)
-        expect(await offer.ownerOf(1)).to.equal(wallet0)
+        expect(await party.ownerOf(1)).to.equal(wallet0)
         expect((await token.balanceOf(wallet1)).toString()).to.equal('0')
         expect((await token.balanceOf(wallet0)).toString()).to.equal('20')
 
         await increase(duration.weeks(10))
 
-        await expect(offer.transferFrom(wallet0, wallet1, 1))
-          .to.emit(offer, EVENTS.TRANSFER)
+        await expect(party.transferFrom(wallet0, wallet1, 1))
+          .to.emit(party, EVENTS.TRANSFER)
           .withArgs(wallet0, wallet1, 1)
 
-        expect(await offer.ownerOf(1)).to.equal(wallet1)
+        expect(await party.ownerOf(1)).to.equal(wallet1)
         expect((await token.balanceOf(wallet0)).toString()).to.equal('36')
         expect((await token.balanceOf(wallet1)).toString()).to.equal('0')
 
         await increase(duration.weeks(10))
 
-        await expect(offer.claimVestedTokens(1)).to.emit(offer, EVENTS.TOKENS_CLAIMED).withArgs(1, 16)
+        await expect(party.claimVestedTokens(1)).to.emit(party, EVENTS.TOKENS_CLAIMED).withArgs(1, 16)
 
-        expect(await offer.getVestingBeneficiary(1)).to.equal(wallet1)
+        expect(await party.getVestingBeneficiary(1)).to.equal(wallet1)
         expect((await token.balanceOf(wallet1)).toString()).to.equal('16')
       })
     })
@@ -229,55 +229,55 @@ describe('Offer', function () {
     describe('#safeTransferFrom', () => {
       it('should update vesting recipient on transfer', async () => {
         const proof0 = tree.getProof(0, wallet0, BigNumber.from(100))
-        await expect(offer.claimOffer(0, wallet0, BigNumber.from(100), proof0))
-          .to.emit(offer, EVENTS.OFFER_CLAIMED)
+        await expect(party.joinParty(0, wallet0, BigNumber.from(100), proof0))
+          .to.emit(party, EVENTS.OFFER_CLAIMED)
           .withArgs(1)
-        expect(await offer.ownerOf(1)).to.equal(wallet0)
+        expect(await party.ownerOf(1)).to.equal(wallet0)
         expect((await token.balanceOf(wallet1)).toString()).to.equal('0')
         expect((await token.balanceOf(wallet0)).toString()).to.equal('20')
 
         await increase(duration.weeks(10))
 
-        await expect(offer['safeTransferFrom(address,address,uint256)'](wallet0, wallet1, 1))
-          .to.emit(offer, EVENTS.TRANSFER)
+        await expect(party['safeTransferFrom(address,address,uint256)'](wallet0, wallet1, 1))
+          .to.emit(party, EVENTS.TRANSFER)
           .withArgs(wallet0, wallet1, 1)
 
-        expect(await offer.ownerOf(1)).to.equal(wallet1)
+        expect(await party.ownerOf(1)).to.equal(wallet1)
         expect((await token.balanceOf(wallet0)).toString()).to.equal('36')
         expect((await token.balanceOf(wallet1)).toString()).to.equal('0')
 
         await increase(duration.weeks(10))
 
-        await expect(offer.claimVestedTokens(1)).to.emit(offer, EVENTS.TOKENS_CLAIMED).withArgs(1, 16)
+        await expect(party.claimVestedTokens(1)).to.emit(party, EVENTS.TOKENS_CLAIMED).withArgs(1, 16)
 
-        expect(await offer.getVestingBeneficiary(1)).to.equal(wallet1)
+        expect(await party.getVestingBeneficiary(1)).to.equal(wallet1)
         expect((await token.balanceOf(wallet1)).toString()).to.equal('16')
       })
 
       it('should update vesting recipient on transfer with data', async () => {
         const proof0 = tree.getProof(0, wallet0, BigNumber.from(100))
-        await expect(offer.claimOffer(0, wallet0, BigNumber.from(100), proof0))
-          .to.emit(offer, EVENTS.OFFER_CLAIMED)
+        await expect(party.joinParty(0, wallet0, BigNumber.from(100), proof0))
+          .to.emit(party, EVENTS.OFFER_CLAIMED)
           .withArgs(1)
-        expect(await offer.ownerOf(1)).to.equal(wallet0)
+        expect(await party.ownerOf(1)).to.equal(wallet0)
         expect((await token.balanceOf(wallet1)).toString()).to.equal('0')
         expect((await token.balanceOf(wallet0)).toString()).to.equal('20')
 
         await increase(duration.weeks(10))
 
-        await expect(offer['safeTransferFrom(address,address,uint256,bytes)'](wallet0, wallet1, 1, '0x'))
-          .to.emit(offer, EVENTS.TRANSFER)
+        await expect(party['safeTransferFrom(address,address,uint256,bytes)'](wallet0, wallet1, 1, '0x'))
+          .to.emit(party, EVENTS.TRANSFER)
           .withArgs(wallet0, wallet1, 1)
 
-        expect(await offer.ownerOf(1)).to.equal(wallet1)
+        expect(await party.ownerOf(1)).to.equal(wallet1)
         expect((await token.balanceOf(wallet0)).toString()).to.equal('36')
         expect((await token.balanceOf(wallet1)).toString()).to.equal('0')
 
         await increase(duration.weeks(10))
 
-        await expect(offer.claimVestedTokens(1)).to.emit(offer, EVENTS.TOKENS_CLAIMED).withArgs(1, 16)
+        await expect(party.claimVestedTokens(1)).to.emit(party, EVENTS.TOKENS_CLAIMED).withArgs(1, 16)
 
-        expect(await offer.getVestingBeneficiary(1)).to.equal(wallet1)
+        expect(await party.getVestingBeneficiary(1)).to.equal(wallet1)
         expect((await token.balanceOf(wallet1)).toString()).to.equal('16')
       })
     })

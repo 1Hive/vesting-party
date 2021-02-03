@@ -1,10 +1,10 @@
 {
   "network": "localhost",
   "dataSources": {
-    "OfferFactory": [
+    "PartyFactory": [
       {
-        "name": "OfferFactory",
-        "address": "0x87eE5EA31dCf1f526f21Bb576131C37890AE65E0",
+        "name": "PartyFactory",
+        "address": "0xdB908426D113985789Ce299f39a190EDf7d848Ab",
         "startBlock": 1
       }
     ]

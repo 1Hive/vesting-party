@@ -1,0 +1,6 @@
+# Party factories
+{{#dataSources.PartyFactory}}
+  {{> PartyFactory.template.yaml}}
+{{/ dataSources.PartyFactory}}
+
+# Party factories

@@ -2,30 +2,30 @@ specVersion: 0.0.2
 schema:
   file: ./src/schema.graphql
 dataSources:
-{{> OfferFactory.yaml}}
+{{> PartyFactory.yaml}}
 templates:
   - kind: ethereum/contract
-    name: Offer
+    name: Party
     network: localhost
     source:
-      abi: Offer
+      abi: Party
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
       language: wasm/assemblyscript
       entities:
-        - Offer
+        - Party
         - Vesting
         - Claim
         - ERC20
       abis:
-        - name: Offer
-          file: $HARDHAT_PACKAGE/abis/contracts/Offer.sol/Offer.json
+        - name: Party
+          file: $HARDHAT_PACKAGE/abis/contracts/Party.sol/Party.json
       eventHandlers:
         - event: VestingAdded(indexed uint256)
           handler: handleVestingAdded
-        - event: OfferClaimed(indexed uint256)
-          handler: handleOfferClaimed
+        - event: PartyJoined(indexed uint256)
+          handler: handlePartyJoined
         - event: VestingBeneficiaryTransfered(indexed uint256)
           handler: handleVestingTokensClaimed
         - event: VestingBeneficiaryTransfered(indexed uint256)

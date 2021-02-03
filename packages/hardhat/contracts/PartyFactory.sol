@@ -1,32 +1,32 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.6.0 <0.7.0;
 
-import "./Offer.sol";
+import "./Party.sol";
 
-contract OfferFactory {
-    event NewOffer(address offer);
+contract PartyFactory {
+    event NewParty(address party);
 
-    function createOffer(
+    function createParty(
         address _token,
         bytes32 _merkleRoot,
-        uint256 _offerDuration,
+        uint256 _partyDuration,
         uint64 _upfrontVestingPct,
         uint8 _vestingPeriodUnit,
         uint16 _vestingDurationInPeriods,
         uint16 _vestingCliffInPeriods
-    ) public returns (Offer offer) {
-        offer = new Offer(
+    ) public returns (Party party) {
+        party = new Party(
             _token,
             _merkleRoot,
-            _offerDuration,
+            _partyDuration,
             _upfrontVestingPct,
             _vestingPeriodUnit,
             _vestingDurationInPeriods,
             _vestingCliffInPeriods
         );
 
-        emit NewOffer(address(offer));
+        emit NewParty(address(party));
 
-        return offer;
+        return party;
     }
 }

@@ -4,11 +4,11 @@ import { Client } from "urql";
 describe("Subgraph", () => {
   let graphqlClient: Client;
   beforeAll(() => {
-    const SUBGRAPH_URL = "http://localhost:8000/subgraphs/name/1hive/vested";
+    const SUBGRAPH_URL = "http://localhost:8000/subgraphs/name/1hive/vesting";
     graphqlClient = new Client({ url: SUBGRAPH_URL });
   });
 
-  describe("Offer data", () => {
+  describe("Party data", () => {
     let data: any;
 
     const OFFER_QUERY = gql`
@@ -21,7 +21,7 @@ describe("Subgraph", () => {
       const { data } = await graphqlClient.query(OFFER_QUERY).toPromise();
     });
 
-    test("returns the offer data", () => {
+    test("returns the party data", () => {
       expect(data.id).toBe("");
     });
   });

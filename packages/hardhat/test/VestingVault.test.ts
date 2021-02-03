@@ -26,7 +26,7 @@ const overrides = {
   gasLimit: 9500000,
 }
 
-describe('TestVestingVault', () => {
+describe('VestingVault', () => {
   let token: TestERC20
   let vault: TestVestingVault
 
