@@ -5,8 +5,11 @@ import chalk from 'chalk'
 import { task, HardhatUserConfig } from 'hardhat/config'
 
 import '@nomiclabs/hardhat-waffle'
-import 'hardhat-typechain'
+import '@tenderly/hardhat-tenderly'
+// import 'hardhat-deploy'
 import 'hardhat-abi-exporter'
+import 'hardhat-gas-reporter'
+import 'hardhat-typechain'
 import 'solidity-coverage'
 import { HttpNetworkUserConfig } from 'hardhat/types'
 
@@ -113,6 +116,12 @@ const config: HardhatUserConfig = {
       },
     },
   },
+  // namedAccounts: {
+  //   deployer: 0,
+  // },
+  gasReporter: {
+    enabled: process.env.REPORT_GAS ? true : false,
+  },
   typechain: {
     outDir: 'typechain',
     target: 'ethers-v5',
@@ -120,6 +129,10 @@ const config: HardhatUserConfig = {
   abiExporter: {
     path: './abis',
     clear: true,
+  },
+  tenderly: {
+    username: '0xgabi',
+    project: 'vested',
   },
 }
 
