@@ -5,16 +5,28 @@
   "scripts": {
     "codegen": "graph codegen",
     "build": "graph build",
-    "deploy": "graph deploy --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ GITHUB_USERNAME/your-contract",
-    "create-local": "graph create --node http://localhost:8020/ scaffold-eth/your-contract",
-    "remove-local": "graph remove --node http://localhost:8020/ scaffold-eth/your-contract",
-    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 scaffold-eth/your-contract"
+    "deploy": "graph deploy --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ 1hive/vested",
+    "create-local": "graph create --node http://localhost:8020/ 1hive/vested",
+    "remove-local": "graph remove --node http://localhost:8020/ 1hive/vested",
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 1hive/vested",
+    "manifest-local": "scripts/build-manifest.sh hardhat",
+    "manifest-mainnet": "scripts/build-manifest.sh mainnet",
+    "manifest-rinkeby": "scripts/build-manifest.sh rinkeby",
+    "manifest-xdai": "scripts/build-manifest.sh xdai",
+    "deploy-mainnet": "scripts/deploy.sh 1hive mainnet",
+    "deploy-rinkeby": "scripts/deploy.sh 1hive rinkeby",
+    "deploy-xdai": "scripts/deploy.sh 1hive xdai"
   },
   "dependencies": {
-    "@graphprotocol/graph-cli": "0.18.0",
-    "@graphprotocol/graph-ts": "0.18.0"
+    "@graphprotocol/graph-cli": "0.19.0",
+    "@graphprotocol/graph-ts": "0.19.0"
   },
   "devDependencies": {
-    "mustache": "^3.1.0"
+    "@types/jest": "^26.0.20",
+    "graphql-tag": "^2.11.0",
+    "jest": "^26.6.3",
+    "mustache": "^4.1.0",
+    "ts-jest": "^26.5.0",
+    "urql": "^1.11.6"
   }
 }

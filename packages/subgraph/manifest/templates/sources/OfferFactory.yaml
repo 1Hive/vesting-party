@@ -1,0 +1,6 @@
+# Offer factories
+{{#dataSources.OfferFactory}}
+  {{> OfferFactory.template.yaml}}
+{{/ dataSources.OfferFactory}}
+
+# Offer factories

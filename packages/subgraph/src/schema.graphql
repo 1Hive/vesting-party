@@ -1,15 +1,56 @@
-type Purpose @entity {
-  id: ID!
-  sender: Sender!
-  purpose: String!
-  createdAt: BigInt!
-  transactionHash: String!
-}
-
-type Sender @entity {
+type OfferFactory @entity {
   id: ID!
   address: Bytes!
-  purposes: [Purpose!] @derivedFrom(field: "sender")
+  count: Int!
+  offers: [Offer!] @derivedFrom(field: "factory")
+}
+
+type Offer @entity {
+  id: ID!
+  address: Bytes!
   createdAt: BigInt!
-  purposeCount: BigInt!
+  factory: OfferFactory!
+  name: String!
+  symbol: String!
+  token: ERC20!
+  merkleRoot: Bytes!
+  duration: BigInt!
+  upfrontPct: BigInt!
+  periodUnit: PeriodUnit!
+  vestingDurationInPeriods: Int!
+  vestingCliffInPeriods: Int!
+  vestings: [Vesting!] @derivedFrom(field: "offer")
+}
+
+type Vesting @entity {
+  id: ID!
+  tokenId: BigInt!
+  offer: Offer!
+  startTime: BigInt!
+  beneficiary: Bytes!
+  amount: BigInt!
+  periodsClaimed: Int!
+  amountClaimed: BigInt!
+  claims: [Claim!] @derivedFrom(field: "vesting")
+}
+
+type Claim @entity {
+  id: ID!
+  vesting: Vesting!
+  createdAt: BigInt!
+  beneficiary: Bytes!
+  amount: BigInt!
+}
+
+type ERC20 @entity {
+  id: ID!
+  name: String!
+  symbol: String!
+  decimals: Int!
+}
+
+enum PeriodUnit {
+  Day
+  Week
+  Month
 }

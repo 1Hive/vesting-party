@@ -2,24 +2,32 @@ specVersion: 0.0.2
 schema:
   file: ./src/schema.graphql
 dataSources:
+{{> OfferFactory.yaml}}
+templates:
   - kind: ethereum/contract
-    name: YourContract
+    name: Offer
     network: localhost
     source:
-      address: '{{YourContractAddress}}'
-      abi: YourContract
-      startBlock: 1
+      abi: Offer
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
       language: wasm/assemblyscript
       entities:
-        - Purpose
-        - Sender
+        - Offer
+        - Vesting
+        - Claim
+        - ERC20
       abis:
-        - name: YourContract
-          file: ./abis/YourContract.json
+        - name: Offer
+          file: $HARDHAT_PACKAGE/abis/contracts/Offer.sol/Offer.json
       eventHandlers:
-        - event: SetPurpose(address,string)
-          handler: handleSetPurpose
+        - event: VestingAdded(indexed uint256)
+          handler: handleVestingAdded
+        - event: OfferClaimed(indexed uint256)
+          handler: handleOfferClaimed
+        - event: VestingBeneficiaryTransfered(indexed uint256)
+          handler: handleVestingTokensClaimed
+        - event: VestingBeneficiaryTransfered(indexed uint256)
+          handler: handleVestingBeneficiaryTransfered
       file: ./src/mapping.ts

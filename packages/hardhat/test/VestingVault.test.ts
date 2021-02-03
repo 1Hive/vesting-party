@@ -19,7 +19,7 @@ const EVENTS = {
   ADDED: 'VestingAdded',
   REVOKED: 'VestingRevoked',
   CLAIMED: 'VestingTokensClaimed',
-  TRANSFERED: 'VestingRecipientTransfered',
+  TRANSFERED: 'VestingBeneficiaryTransfered',
 }
 
 const overrides = {
@@ -80,9 +80,7 @@ describe('TestVestingVault', () => {
     })
 
     it('should emit an event on grant', async function () {
-      await expect(vault._addTokenVesting(0, otherAddress, 10))
-        .to.emit(vault, EVENTS.ADDED)
-        .withArgs(0, otherAddress, 10)
+      await expect(vault._addTokenVesting(0, otherAddress, 10)).to.emit(vault, EVENTS.ADDED).withArgs(0)
     })
 
     it('should emit an event on revoke', async function () {
@@ -93,7 +91,7 @@ describe('TestVestingVault', () => {
     it('should emit an event on claim', async function () {
       await vault._addTokenVesting(0, otherAddress, 10)
       await increase(duration.days(3))
-      await expect(vault.claimVestedTokens(0)).to.emit(vault, EVENTS.CLAIMED).withArgs(otherAddress, 3)
+      await expect(vault.claimVestedTokens(0)).to.emit(vault, EVENTS.CLAIMED).withArgs(0, 3)
     })
 
     it('can get grant start time', async function () {
@@ -110,7 +108,7 @@ describe('TestVestingVault', () => {
 
     it('can get grant recipient', async function () {
       await vault._addTokenVesting(0, otherAddress, 1000)
-      expect(await vault.getVestingRecipient(0)).to.equal(otherAddress)
+      expect(await vault.getVestingBeneficiary(0)).to.equal(otherAddress)
     })
 
     it('can not add a grant if one already exists', async function () {
@@ -128,13 +126,22 @@ describe('TestVestingVault', () => {
       await expect(vault._addTokenVesting(0, otherAddress, 9)).to.be.revertedWith(ERRORS.VEST_AMOUNT)
     })
 
+    it('should have no vesting before cliff', async function () {
+      await vault._addTokenVesting(0, otherAddress, 1000)
+      expect((await token.balanceOf(otherAddress)).toString()).to.equal('0')
+
+      await increase(duration.days(1))
+
+      await expect(vault.claimVestedTokens(0)).to.be.revertedWith(ERRORS.NO_VEST)
+    })
+
     it('can claim vested tokens', async function () {
       await vault._addTokenVesting(0, otherAddress, 1000)
       expect((await token.balanceOf(otherAddress)).toString()).to.equal('0')
 
       await increase(duration.days(2))
 
-      await expect(vault.claimVestedTokens(0)).to.emit(vault, EVENTS.CLAIMED).withArgs(otherAddress, 200)
+      await expect(vault.claimVestedTokens(0)).to.emit(vault, EVENTS.CLAIMED).withArgs(0, 200)
       expect((await token.balanceOf(otherAddress)).toString()).to.equal('200')
     })
 
@@ -144,7 +151,7 @@ describe('TestVestingVault', () => {
 
       await increase(duration.days(20))
 
-      await expect(vault.claimVestedTokens(0)).to.emit(vault, EVENTS.CLAIMED).withArgs(otherAddress, 1000)
+      await expect(vault.claimVestedTokens(0)).to.emit(vault, EVENTS.CLAIMED).withArgs(0, 1000)
       expect((await token.balanceOf(otherAddress)).toString()).to.equal('1000')
     })
 
@@ -153,9 +160,9 @@ describe('TestVestingVault', () => {
 
       await increase(duration.days(3))
 
-      await expect(vault._transferVestingRecipient(0, ownerAddress))
-        .to.emit(vault, EVENTS.TRANSFERED)
-        .withArgs(ownerAddress)
+      await expect(vault._transferVestingBeneficiary(0, ownerAddress)).to.emit(vault, EVENTS.TRANSFERED).withArgs(0)
+
+      expect(await vault.getVestingBeneficiary(0)).to.equal(ownerAddress)
 
       expect((await token.balanceOf(ownerAddress)).toString()).to.equal('0')
       expect((await token.balanceOf(otherAddress)).toString()).to.equal('300')
@@ -215,15 +222,15 @@ describe('TestVestingVault', () => {
       await expect(vault.claimVestedTokens(0)).to.be.revertedWith(ERRORS.NO_VEST)
 
       await increase(duration.days(1))
-      await expect(vault.claimVestedTokens(0)).to.emit(vault, EVENTS.CLAIMED).withArgs(otherAddress, 600)
+      await expect(vault.claimVestedTokens(0)).to.emit(vault, EVENTS.CLAIMED).withArgs(0, 600)
       expect((await token.balanceOf(otherAddress)).toString()).to.equal('600')
 
       await increase(duration.days(1))
-      await expect(vault.claimVestedTokens(0)).to.emit(vault, EVENTS.CLAIMED).withArgs(otherAddress, 200)
+      await expect(vault.claimVestedTokens(0)).to.emit(vault, EVENTS.CLAIMED).withArgs(0, 200)
       expect((await token.balanceOf(otherAddress)).toString()).to.equal('800')
 
       await increase(duration.days(1))
-      await expect(vault.claimVestedTokens(0)).to.emit(vault, EVENTS.CLAIMED).withArgs(otherAddress, 200)
+      await expect(vault.claimVestedTokens(0)).to.emit(vault, EVENTS.CLAIMED).withArgs(0, 200)
       expect((await token.balanceOf(otherAddress)).toString()).to.equal('1000')
 
       await increase(duration.days(1))
@@ -247,17 +254,17 @@ describe('TestVestingVault', () => {
 
       await increase(duration.days(1))
 
-      await expect(vault.claimVestedTokens(0)).to.emit(vault, EVENTS.CLAIMED).withArgs(otherAddress, 333)
+      await expect(vault.claimVestedTokens(0)).to.emit(vault, EVENTS.CLAIMED).withArgs(0, 333)
       expect((await token.balanceOf(otherAddress)).toString()).to.equal('333')
 
       await increase(duration.days(1))
 
-      await expect(vault.claimVestedTokens(0)).to.emit(vault, EVENTS.CLAIMED).withArgs(otherAddress, 333)
+      await expect(vault.claimVestedTokens(0)).to.emit(vault, EVENTS.CLAIMED).withArgs(0, 333)
       expect((await token.balanceOf(otherAddress)).toString()).to.equal('666')
 
       await increase(duration.days(1))
 
-      await expect(vault.claimVestedTokens(0)).to.emit(vault, EVENTS.CLAIMED).withArgs(otherAddress, 334)
+      await expect(vault.claimVestedTokens(0)).to.emit(vault, EVENTS.CLAIMED).withArgs(0, 334)
       expect((await token.balanceOf(otherAddress)).toString()).to.equal('1000')
 
       await expect(vault.claimVestedTokens(0)).to.be.revertedWith(ERRORS.FULLY_VESTED)
@@ -279,7 +286,7 @@ describe('TestVestingVault', () => {
 
       await increase(duration.days(1))
 
-      await expect(vault.claimVestedTokens(0)).to.emit(vault, EVENTS.CLAIMED).withArgs(otherAddress, 1000)
+      await expect(vault.claimVestedTokens(0)).to.emit(vault, EVENTS.CLAIMED).withArgs(0, 1000)
       expect((await token.balanceOf(otherAddress)).toString()).to.equal('1000')
       await expect(vault.claimVestedTokens(0)).to.be.revertedWith(ERRORS.FULLY_VESTED)
     })

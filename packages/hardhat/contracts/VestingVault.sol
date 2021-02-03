@@ -24,30 +24,23 @@ contract VestingVault {
     ERC20 public token;
 
     struct Vesting {
-        address recipient;
+        address beneficiary;
         uint256 amount;
         uint256 startTime;
         uint16 periodsClaimed;
-        uint256 totalClaimed;
+        uint256 amountClaimed;
     }
 
-    event VestingAdded(
-        uint256 indexed tokenId,
-        address indexed recipient,
-        uint256 amount
-    );
+    event VestingAdded(uint256 indexed tokenId);
     event VestingRevoked(
         uint256 indexed tokenId,
-        address indexed recipient,
+        address beneficiary,
         uint256 amountVested
     );
-    event VestingTokensClaimed(
-        address indexed recipient,
-        uint256 amountClaimed
-    );
-    event VestingRecipientTransfered(address indexed recipient);
+    event VestingTokensClaimed(uint256 indexed tokenId, uint256 amountVested);
+    event VestingBeneficiaryTransfered(uint256 indexed tokenId);
 
-    // unique erc721 token id to token vesting relation
+    // unique erc721 token id to token vesting
     mapping(uint256 => Vesting) private tokenVestings;
 
     /// @param _vestingPeriodUnit The choosed period of time (1 days(0), 1 weeks(1), 1 months(2))
@@ -80,15 +73,15 @@ contract VestingVault {
         tokenVesting.periodsClaimed = uint16(
             tokenVesting.periodsClaimed.add(periodsVested)
         );
-        tokenVesting.totalClaimed = uint256(
-            tokenVesting.totalClaimed.add(amountVested)
+        tokenVesting.amountClaimed = uint256(
+            tokenVesting.amountClaimed.add(amountVested)
         );
 
         require(
-            token.transfer(tokenVesting.recipient, amountVested),
+            token.transfer(tokenVesting.beneficiary, amountVested),
             "no tokens"
         );
-        emit VestingTokensClaimed(tokenVesting.recipient, amountVested);
+        emit VestingTokensClaimed(_tokenId, amountVested);
     }
 
     function getVestingStartTime(uint256 _tokenId)
@@ -105,23 +98,41 @@ contract VestingVault {
         return tokenVesting.amount;
     }
 
-    function getVestingRecipient(uint256 _tokenId)
+    function getVestingBeneficiary(uint256 _tokenId)
         public
         view
         returns (address)
     {
         Vesting storage tokenVesting = tokenVestings[_tokenId];
-        return tokenVesting.recipient;
+        return tokenVesting.beneficiary;
+    }
+
+    function getVestingAmountClaimed(uint256 _tokenId)
+        public
+        view
+        returns (uint256)
+    {
+        Vesting storage tokenVesting = tokenVestings[_tokenId];
+        return tokenVesting.amountClaimed;
+    }
+
+    function getVestingPeriodsClaimed(uint256 _tokenId)
+        public
+        view
+        returns (uint16)
+    {
+        Vesting storage tokenVesting = tokenVestings[_tokenId];
+        return tokenVesting.periodsClaimed;
     }
 
     /// @notice Add a new token grant for an erc721 token with `_tokenId`.
     /// The amount of tokens here need to be preapproved for transfer by this `Vesting` contract before this call
     /// @param _tokenId Vesting unique erc721 token id
-    /// @param _recipient Address of the token grant recipient entitled to claim the grant funds
+    /// @param _beneficiary Address of the token grant beneficiary entitled to claim the grant funds
     /// @param _amount Total number of tokens in
     function _addTokenVesting(
         uint256 _tokenId,
-        address _recipient,
+        address _beneficiary,
         uint256 _amount
     ) internal {
         // No need to check this here as the merkleDistributor already check
@@ -131,19 +142,31 @@ contract VestingVault {
 
         Vesting memory vesting =
             Vesting({
-                recipient: _recipient,
+                beneficiary: _beneficiary,
                 startTime: currentTime(),
                 amount: _amount,
                 periodsClaimed: 0,
-                totalClaimed: 0
+                amountClaimed: 0
             });
 
         tokenVestings[_tokenId] = vesting;
 
-        emit VestingAdded(_tokenId, _recipient, vesting.amount);
+        emit VestingAdded(_tokenId);
     }
 
-    /// @notice Terminate token vesting transferring all vested tokens to the vesting `recipient`
+    /// @notice Transfer the beneficiary of a token grant with `_tokenId`
+    function _transferVestingBeneficiary(uint256 _tokenId, address _beneficiary)
+        internal
+    {
+        claimVestedTokens(_tokenId);
+
+        Vesting storage tokenVesting = tokenVestings[_tokenId];
+        tokenVesting.beneficiary = _beneficiary;
+
+        emit VestingBeneficiaryTransfered(_tokenId);
+    }
+
+    /// @notice Terminate token vesting transferring all vested tokens to the vesting `beneficiary`
     /// and returning all non-vested tokens to the contract owner
     /// Secured to the contract owner only
     /// @param _tokenId Vesting unique erc721 token id
@@ -153,29 +176,17 @@ contract VestingVault {
         (periodsVested, amountVested) = calculateVestingClaim(_tokenId);
 
         Vesting storage tokenVesting = tokenVestings[_tokenId];
-        address recipient = tokenVesting.recipient;
+        address beneficiary = tokenVesting.beneficiary;
 
-        tokenVesting.recipient = address(0);
+        tokenVesting.beneficiary = address(0);
         tokenVesting.startTime = 0;
         tokenVesting.amount = 0;
         tokenVesting.periodsClaimed = 0;
-        tokenVesting.totalClaimed = 0;
+        tokenVesting.amountClaimed = 0;
 
-        require(token.transfer(recipient, amountVested));
+        require(token.transfer(beneficiary, amountVested));
 
-        emit VestingRevoked(_tokenId, recipient, amountVested);
-    }
-
-    /// @notice Transfer the recipient of a token grant with `_tokenId`
-    function _transferVestingRecipient(uint256 _tokenId, address _recipient)
-        internal
-    {
-        claimVestedTokens(_tokenId);
-
-        Vesting storage tokenVesting = tokenVestings[_tokenId];
-        tokenVesting.recipient = _recipient;
-
-        emit VestingRecipientTransfered(_recipient);
+        emit VestingRevoked(_tokenId, beneficiary, amountVested);
     }
 
     /// @notice Calculate the vested and unclaimed days and tokens available for `_grantId` to claim
@@ -189,7 +200,7 @@ contract VestingVault {
         Vesting storage tokenVesting = tokenVestings[_tokenId];
 
         require(
-            tokenVesting.totalClaimed < tokenVesting.amount,
+            tokenVesting.amountClaimed < tokenVesting.amount,
             "Vesting fully claimed"
         );
 
@@ -204,7 +215,7 @@ contract VestingVault {
         // If over vesting duration, all tokens vested
         if (elapsedPeriods >= vestingDuration) {
             uint256 remainingVesting =
-                tokenVesting.amount.sub(tokenVesting.totalClaimed);
+                tokenVesting.amount.sub(tokenVesting.amountClaimed);
             return (vestingDuration, remainingVesting);
         } else {
             uint16 periodsVested =

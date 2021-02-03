@@ -110,22 +110,6 @@ describe('MerkleDistributor', () => {
           .withArgs(1, addresses[1], 101)
       })
 
-      // TODO move to Offer tests
-      // it("transfers the token", async () => {
-      //   const proof0 = tree.getProof(0, addresses[0], BigNumber.from(100));
-      //   expect(await token.balanceOf(addresses[0])).to.eq(0);
-      //   await distributor.claim(0, addresses[0], 100, proof0, overrides);
-      //   expect(await token.balanceOf(addresses[0])).to.eq(100);
-      // });
-
-      // it("must have enough to transfer", async () => {
-      //   const proof0 = tree.getProof(0, addresses[0], BigNumber.from(100));
-      //   await token.setBalance(distributor.address, 99);
-      //   await expect(
-      //     distributor.claim(0, addresses[0], 100, proof0, overrides)
-      //   ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
-      // });
-
       it('sets #isClaimed', async () => {
         const proof0 = tree.getProof(0, addresses[0], BigNumber.from(100))
         expect(await distributor.isClaimed(0)).to.eq(false)

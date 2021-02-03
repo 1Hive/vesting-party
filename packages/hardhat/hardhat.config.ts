@@ -7,6 +7,7 @@ import { task, HardhatUserConfig } from 'hardhat/config'
 import '@nomiclabs/hardhat-waffle'
 import '@tenderly/hardhat-tenderly'
 // import 'hardhat-deploy'
+import 'hardhat-abi-exporter'
 import 'hardhat-gas-reporter'
 import 'hardhat-typechain'
 import 'solidity-coverage'
@@ -107,7 +108,7 @@ const config: HardhatUserConfig = {
     },
   },
   solidity: {
-    version: '0.6.8',
+    version: '0.6.7',
     settings: {
       optimizer: {
         enabled: true,
@@ -124,6 +125,10 @@ const config: HardhatUserConfig = {
   typechain: {
     outDir: 'typechain',
     target: 'ethers-v5',
+  },
+  abiExporter: {
+    path: './abis',
+    clear: true,
   },
   tenderly: {
     username: '0xgabi',
