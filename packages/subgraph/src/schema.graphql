@@ -14,7 +14,6 @@ type Party @entity {
   symbol: String!
   token: ERC20!
   merkleRoot: Bytes!
-  endAt: BigInt!
   upfrontPct: BigInt!
   vestingPeriod: BigInt!
   vestingDurationInPeriods: Int!
