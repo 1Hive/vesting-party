@@ -2,7 +2,7 @@
   name: {{name}}
   network: {{network}}
   source:
-    abi: OfferFactory
+    abi: PartyFactory
     address: "{{address}}"
     startBlock: {{startBlock}}
   mapping:
@@ -10,15 +10,15 @@
     apiVersion: 0.0.4
     language: wasm/assemblyscript
     entities:
-      - OfferFactory
-      - Offer
+      - PartyFactory
+      - Party
       - ERC20
     abis:
-      - name: OfferFactory
-        file: $HARDHAT_PACKAGE/abis/contracts/OfferFactory.sol/OfferFactory.json
+      - name: PartyFactory
+        file: $HARDHAT_PACKAGE/abis/contracts/PartyFactory.sol/PartyFactory.json
       - name: ERC20
         file: ./abis/ERC20.json
     eventHandlers:
-      - event: NewOffer(address)
-        handler: handleNewOffer
+      - event: NewParty(address)
+        handler: handleNewParty
     file: ./src/mapping.ts

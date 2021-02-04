@@ -1,5 +1,18 @@
 [
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "party",
+        "type": "address"
+      }
+    ],
+    "name": "NewParty",
+    "type": "event"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -13,7 +26,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "_offerDuration",
+        "name": "_partyDuration",
         "type": "uint256"
       },
       {
@@ -35,23 +48,13 @@
         "internalType": "uint16",
         "name": "_vestingCliffInPeriods",
         "type": "uint16"
-      },
-      {
-        "internalType": "string",
-        "name": "_erc721Name",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "_erc721Symbol",
-        "type": "string"
       }
     ],
-    "name": "createOffer",
+    "name": "startParty",
     "outputs": [
       {
-        "internalType": "contract Offer",
-        "name": "offer",
+        "internalType": "contract Party",
+        "name": "party",
         "type": "address"
       }
     ],

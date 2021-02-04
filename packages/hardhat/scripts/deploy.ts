@@ -8,7 +8,7 @@ import R from 'ramda'
 const main = async () => {
   console.log('\n\n 📡 Deploying...\n')
 
-  const offer = await deploy('Offer') // <-- add in constructor args like line 16 vvvv
+  const offer = await deploy('Offer') // <-- add in constructor args like line 16
 
   // const exampleToken = await deploy("ExampleToken")
   // const examplePriceOracle = await deploy("ExamplePriceOracle")

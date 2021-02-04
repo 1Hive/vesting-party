@@ -6,7 +6,7 @@ import { task, HardhatUserConfig } from 'hardhat/config'
 
 import '@nomiclabs/hardhat-waffle'
 import '@tenderly/hardhat-tenderly'
-// import 'hardhat-deploy'
+import 'hardhat-deploy'
 import 'hardhat-abi-exporter'
 import 'hardhat-gas-reporter'
 import 'hardhat-typechain'
@@ -27,13 +27,13 @@ const { isAddress, getAddress, formatUnits, parseUnits } = utils
 //
 // Select the network you want to deploy to here:
 //
-const defaultNetwork = 'localhost'
+const defaultNetwork = 'hardhat'
 
 function mnemonic() {
   try {
     return fs.readFileSync('./mnemonic.txt').toString().trim()
   } catch (e) {
-    if (defaultNetwork !== 'localhost') {
+    if (defaultNetwork !== 'hardhat') {
       console.log(
         '☢️ WARNING: No mnemonic file created for a deploy account. Try `yarn run generate` and then `yarn run account`.'
       )
@@ -116,9 +116,9 @@ const config: HardhatUserConfig = {
       },
     },
   },
-  // namedAccounts: {
-  //   deployer: 0,
-  // },
+  namedAccounts: {
+    deployer: 0,
+  },
   gasReporter: {
     enabled: process.env.REPORT_GAS ? true : false,
   },

@@ -11,7 +11,7 @@ import "./VestingVault.sol";
 
 import "hardhat/console.sol";
 
-contract Offer is Ownable, VestingVault, ERC721 {
+contract Party is Ownable, VestingVault, ERC721 {
     using SafeMath for uint256;
     using SafeMath for uint64;
     using SafeMath for uint16;
@@ -25,19 +25,19 @@ contract Offer is Ownable, VestingVault, ERC721 {
 
     bytes32 public merkleRoot;
     uint64 public upfrontVestingPct;
-    uint256 public offerEnd;
+    uint256 public partyEnd;
 
-    event OfferClaimed(uint256 indexed tokenId);
+    event PartyJoined(uint256 indexed tokenId);
 
     modifier onlyAfter(uint256 _time) {
-        require(now > _time, "Offer: duration not reach.");
+        require(now > _time, "Party: duration not reach.");
         _;
     }
 
     constructor(
         address _token,
         bytes32 _merkleRoot,
-        uint256 _offerDuration,
+        uint256 _partyDuration,
         uint64 _upfrontVestingPct,
         uint8 _vestingPeriodUnit,
         uint16 _vestingDurationInPeriods,
@@ -56,12 +56,12 @@ contract Offer is Ownable, VestingVault, ERC721 {
         )
     {
         upfrontVestingPct = _upfrontVestingPct;
-        offerEnd = _offerDuration.add(now);
+        partyEnd = _partyDuration.add(now);
         merkleRoot = _merkleRoot;
         merkleDistributor = new MerkleDistributor(address(token), _merkleRoot);
     }
 
-    function claimOffer(
+    function joinParty(
         uint256 index,
         address beneficiary,
         uint256 amount,
@@ -89,11 +89,11 @@ contract Offer is Ownable, VestingVault, ERC721 {
                     beneficiary,
                     uint256(amount.mul(upfrontVestingPct).div(PCT_BASE))
                 ),
-                "Offer: Transfer failed."
+                "Party: Transfer failed."
             );
         }
 
-        emit OfferClaimed(newItemId);
+        emit PartyJoined(newItemId);
     }
 
     function transferFrom(
@@ -121,15 +121,15 @@ contract Offer is Ownable, VestingVault, ERC721 {
         super.safeTransferFrom(from, to, tokenId, data);
     }
 
-    /// @notice Withdraw all tokens from the Offer to the `recipient` address. Only allowed after the offer ends.
+    /// @notice Withdraw all tokens from the Party to the `recipient` address. Only allowed after the offer ends.
     function withdrawTokens(address recipient)
         external
         onlyOwner
-        onlyAfter(offerEnd)
+        onlyAfter(partyEnd)
     {
         require(
             token.transfer(recipient, token.balanceOf(address(this))),
-            "Offer: Transfer failed."
+            "Party: Transfer failed."
         );
     }
 }

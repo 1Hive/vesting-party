@@ -1,15 +1,15 @@
-type OfferFactory @entity {
+type PartyFactory @entity {
   id: ID!
   address: Bytes!
   count: Int!
-  offers: [Offer!] @derivedFrom(field: "factory")
+  parties: [Party!] @derivedFrom(field: "factory")
 }
 
-type Offer @entity {
+type Party @entity {
   id: ID!
   address: Bytes!
   createdAt: BigInt!
-  factory: OfferFactory!
+  factory: PartyFactory!
   name: String!
   symbol: String!
   token: ERC20!
@@ -19,13 +19,13 @@ type Offer @entity {
   vestingPeriod: BigInt!
   vestingDurationInPeriods: Int!
   vestingCliffInPeriods: Int!
-  vestings: [Vesting!] @derivedFrom(field: "offer")
+  vestings: [Vesting!] @derivedFrom(field: "party")
 }
 
 type Vesting @entity {
   id: ID!
   tokenId: BigInt!
-  offer: Offer!
+  party: Party!
   startTime: BigInt!
   beneficiary: Bytes!
   amount: BigInt!
