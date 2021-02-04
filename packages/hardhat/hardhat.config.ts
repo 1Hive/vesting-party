@@ -13,6 +13,7 @@ import 'hardhat-gas-reporter'
 import 'hardhat-typechain'
 import 'solidity-coverage'
 import { HttpNetworkUserConfig } from 'hardhat/types'
+import { TestERC20 } from './typechain'
 
 const { isAddress, getAddress, formatUnits, parseUnits } = utils
 
@@ -144,6 +145,60 @@ function debug(text) {
     console.log(text)
   }
 }
+
+// Setup a new party using the existing factory and tokens deployed:
+// hardhat start-party --root <root> --upfront <pct> --duration <#days> --cliff <#days> --deposit <amount> --network <network>
+task('start-party', 'Get the party started 🎉')
+  .addParam('root', 'The merkle root hash')
+  .addParam('upfront', 'Upfront vesting %')
+  .addParam('duration', 'Vesting duration in days')
+  .addParam('cliff', 'Vesting clif in days')
+  .addOptionalParam('deposit', 'Amount of tokens to deposit in the party')
+  .setAction(async ({ root, upfront, duration, cliff, deposit }, hre) => {
+    const { deployments, getNamedAccounts } = hre
+    const { execute } = deployments
+
+    const { deployer } = await getNamedAccounts()
+
+    const recipt = await execute(
+      'PartyFactory',
+      { from: deployer, gasLimit: 9500000, log: true },
+      'startParty',
+      (await deployments.get('TestERC20')).address,
+      root,
+      upfront,
+      0, // day
+      duration,
+      cliff
+    )
+
+    const partyFactoryInterface = new hre.ethers.utils.Interface((await hre.artifacts.readArtifact('PartyFactory')).abi)
+    const { args } = recipt.logs
+      .map((log) => partyFactoryInterface.parseLog(log))
+      .find(({ name }) => name === 'NewParty')
+
+    console.log(`🍻 Party address: ${args[0]}`)
+
+    if (deposit) {
+      await execute(
+        'TestERC20',
+        { from: deployer, gasLimit: 9500000, log: true },
+        'setBalance',
+        args[0],
+        hre.ethers.BigNumber.from(deposit)
+      )
+    }
+  })
+
+task('set', 'Set the token balances of an address')
+  .addParam('token', "The token's address (must be a TestERC20 token)")
+  .addParam('amount', 'The amount to mint')
+  .addParam('address', 'The address to mint to')
+  .setAction(async (taskArgs, hre) => {
+    const token = (await hre.ethers.getContractAt('TestERC20', taskArgs.token)) as TestERC20
+
+    await token.setBalance(taskArgs.address, taskArgs.amount)
+  })
 
 task('wallet', 'Create a wallet (pk) link', async (_, { ethers }) => {
   const randomWallet = ethers.Wallet.createRandom()
