@@ -2,7 +2,6 @@ import { HardhatRuntimeEnvironment } from 'hardhat/types'
 import { DeployFunction } from 'hardhat-deploy/types'
 import BalanceTree from '../src/balance-tree'
 import { BigNumber } from 'ethers'
-import { duration } from '../src/rpc'
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployments, getNamedAccounts } = hre
@@ -32,7 +31,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     'startParty',
     token.address,
     tree.getHexRoot(),
-    duration.years(1),
     PCT_10,
     0, // day
     40,

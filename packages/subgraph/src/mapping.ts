@@ -20,21 +20,18 @@ import { Party as PartyTemplate } from "../generated/templates";
 export function handleNewParty(event: NewParty): void {
   const factory = loadOrCreateFactory(event.address);
   const party = loadOrCreateParty(event.params.party);
-
   const partyContract = PartyContract.bind(event.params.party);
 
   const token = partyContract.token();
-  const tokenContract = ERC20Contract.bind(token);
 
   factory.count = factory.count + 1;
 
   party.createdAt = event.block.timestamp;
   party.factory = factory.id;
-  party.name = "Vested " + tokenContract.name();
-  party.symbol = "v" + tokenContract.symbol();
   party.token = buildERC20(token);
   party.merkleRoot = partyContract.merkleRoot();
-  party.endAt = partyContract.partyEnd();
+  party.name = partyContract.name();
+  party.symbol = partyContract.symbol();
   party.upfrontPct = partyContract.upfrontVestingPct();
   party.vestingPeriod = partyContract.vestingPeriod();
   party.vestingDurationInPeriods = partyContract.vestingDuration();
@@ -46,7 +43,9 @@ export function handleNewParty(event: NewParty): void {
   PartyTemplate.create(event.params.party);
 }
 
-export function handlePartyJoined(event: PartyJoined): void {
+export function handlePartyJoined(event: PartyJoined): void {}
+
+export function handleVestingAdded(event: VestingAdded): void {
   const vestingId = buildVestingId(event.address, event.params.tokenId);
   const vesting = loadOrCreateVesting(vestingId);
 
@@ -110,8 +109,6 @@ export function handleVestingBeneficiaryTransfered(
 
   vesting.save();
 }
-
-export function handleVestingAdded(event: VestingAdded): void {}
 
 function loadOrCreateVesting(vestingId: string): Vesting {
   let vesting = Vesting.load(vestingId);

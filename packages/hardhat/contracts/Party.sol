@@ -5,13 +5,12 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "./MerkleDistributor.sol";
 import "./VestingVault.sol";
 
 import "hardhat/console.sol";
 
-contract Party is Ownable, VestingVault, ERC721 {
+contract Party is VestingVault, ERC721 {
     using SafeMath for uint256;
     using SafeMath for uint64;
     using SafeMath for uint16;
@@ -25,19 +24,12 @@ contract Party is Ownable, VestingVault, ERC721 {
 
     bytes32 public merkleRoot;
     uint64 public upfrontVestingPct;
-    uint256 public partyEnd;
 
-    event PartyJoined(uint256 indexed tokenId);
-
-    modifier onlyAfter(uint256 _time) {
-        require(now > _time, "Party: duration not reach.");
-        _;
-    }
+    event PartyJoined(address indexed beneficiary, uint256 amount);
 
     constructor(
         address _token,
         bytes32 _merkleRoot,
-        uint256 _partyDuration,
         uint64 _upfrontVestingPct,
         uint8 _vestingPeriodUnit,
         uint16 _vestingDurationInPeriods,
@@ -55,8 +47,8 @@ contract Party is Ownable, VestingVault, ERC721 {
             string(abi.encodePacked("v", ERC20(_token).symbol()))
         )
     {
+        require(_upfrontVestingPct <= PCT_BASE);
         upfrontVestingPct = _upfrontVestingPct;
-        partyEnd = _partyDuration.add(now);
         merkleRoot = _merkleRoot;
         merkleDistributor = new MerkleDistributor(address(token), _merkleRoot);
     }
@@ -70,20 +62,24 @@ contract Party is Ownable, VestingVault, ERC721 {
         // Here we do the proof verification and revert if beneficiary can't claim
         merkleDistributor.claim(index, beneficiary, amount, merkleProof);
 
-        // Mint erc721 token.
-        _tokenIds.increment();
-        uint256 newItemId = _tokenIds.current();
-        _safeMint(beneficiary, newItemId);
+        if (upfrontVestingPct < PCT_BASE) {
+            // Mint erc721 token.
+            _tokenIds.increment();
+            uint256 newItemId = _tokenIds.current();
+            _safeMint(beneficiary, newItemId);
 
-        // Grant vesting tokens.
-        _addTokenVesting(
-            newItemId,
-            beneficiary,
-            uint256(amount.mul(PCT_BASE.sub(upfrontVestingPct)).div(PCT_BASE))
-        );
+            // Grant vesting tokens.
+            _addTokenVesting(
+                newItemId,
+                beneficiary,
+                uint256(
+                    amount.mul(PCT_BASE.sub(upfrontVestingPct)).div(PCT_BASE)
+                )
+            );
+        }
 
         // Send upfront tokens.
-        if (upfrontVestingPct != 0) {
+        if (upfrontVestingPct > 0) {
             require(
                 token.transfer(
                     beneficiary,
@@ -93,7 +89,7 @@ contract Party is Ownable, VestingVault, ERC721 {
             );
         }
 
-        emit PartyJoined(newItemId);
+        emit PartyJoined(beneficiary, amount);
     }
 
     function transferFrom(
@@ -119,17 +115,5 @@ contract Party is Ownable, VestingVault, ERC721 {
         _transferVestingBeneficiary(tokenId, to);
 
         super.safeTransferFrom(from, to, tokenId, data);
-    }
-
-    /// @notice Withdraw all tokens from the Party to the `recipient` address. Only allowed after the offer ends.
-    function withdrawTokens(address recipient)
-        external
-        onlyOwner
-        onlyAfter(partyEnd)
-    {
-        require(
-            token.transfer(recipient, token.balanceOf(address(this))),
-            "Party: Transfer failed."
-        );
     }
 }

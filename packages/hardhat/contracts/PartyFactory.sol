@@ -9,7 +9,6 @@ contract PartyFactory {
     function startParty(
         address _token,
         bytes32 _merkleRoot,
-        uint256 _partyDuration,
         uint64 _upfrontVestingPct,
         uint8 _vestingPeriodUnit,
         uint16 _vestingDurationInPeriods,
@@ -18,7 +17,6 @@ contract PartyFactory {
         party = new Party(
             _token,
             _merkleRoot,
-            _partyDuration,
             _upfrontVestingPct,
             _vestingPeriodUnit,
             _vestingDurationInPeriods,
