@@ -13,7 +13,6 @@ import 'hardhat-gas-reporter'
 import 'hardhat-typechain'
 import 'solidity-coverage'
 import { HttpNetworkUserConfig } from 'hardhat/types'
-import { TestERC20 } from './typechain'
 
 const { isAddress, getAddress, formatUnits, parseUnits } = utils
 
@@ -188,16 +187,6 @@ task('start-party', 'Get the party started 🎉')
         hre.ethers.BigNumber.from(deposit)
       )
     }
-  })
-
-task('set', 'Set the token balances of an address')
-  .addParam('token', "The token's address (must be a TestERC20 token)")
-  .addParam('amount', 'The amount to mint')
-  .addParam('address', 'The address to mint to')
-  .setAction(async (taskArgs, hre) => {
-    const token = (await hre.ethers.getContractAt('TestERC20', taskArgs.token)) as TestERC20
-
-    await token.setBalance(taskArgs.address, taskArgs.amount)
   })
 
 task('wallet', 'Create a wallet (pk) link', async (_, { ethers }) => {
