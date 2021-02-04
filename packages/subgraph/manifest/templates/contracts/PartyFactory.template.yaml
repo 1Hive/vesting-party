@@ -16,6 +16,8 @@
     abis:
       - name: PartyFactory
         file: $HARDHAT_PACKAGE/abis/contracts/PartyFactory.sol/PartyFactory.json
+      - name: Party
+        file: $HARDHAT_PACKAGE/abis/contracts/Party.sol/Party.json
       - name: ERC20
         file: ./abis/ERC20.json
     eventHandlers:

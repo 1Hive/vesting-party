@@ -6,7 +6,7 @@ dataSources:
 templates:
   - kind: ethereum/contract
     name: Party
-    network: localhost
+    network: {{network}}
     source:
       abi: Party
     mapping:
