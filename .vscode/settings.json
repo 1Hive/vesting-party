@@ -1,9 +1,4 @@
 {
-  "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "editor.codeActionsOnSave": {
-    "source.fixAll": true
-  },
   "solidity.enableLocalNodeCompiler": false,
   "solidity.compileUsingRemoteVersion": "latest",
   "solidity.packageDefaultDependenciesContractsDirectory": "",
@@ -14,7 +9,5 @@
     "HARDHAT_CONFIG": "hardhat.config.ts",
     "HARDHAT_COMPILE": "true"
   },
-  "mochaExplorer.require": [
-    "ts-node/register/transpile-only"
-  ]
+  "mochaExplorer.require": ["ts-node/register/transpile-only"]
 }
