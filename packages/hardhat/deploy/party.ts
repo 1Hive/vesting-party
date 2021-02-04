@@ -12,9 +12,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const signers = await hre.ethers.getSigners()
 
-  const token = await deploy('TestERC20', {
+  const token = await deploy('ERC20', {
     from: deployer,
-    args: ['Token', 'TKN', 10000],
+    args: ['Token', 'TKN'],
     log: true,
     deterministicDeployment: true,
   })

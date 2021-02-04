@@ -1,64 +1,64 @@
 import { BigInt, Address } from "@graphprotocol/graph-ts";
-import { ERC20 as ERC20Contract } from "../generated/OfferFactory/ERC20";
-import { NewOffer } from "../generated/OfferFactory/OfferFactory";
+import { ERC20 as ERC20Contract } from "../generated/PartyFactory/ERC20";
+import { NewParty } from "../generated/PartyFactory/PartyFactory";
 import {
-  OfferClaimed,
+  PartyJoined,
   VestingAdded,
   VestingBeneficiaryTransfered,
   VestingTokensClaimed,
-  Offer as OfferContract,
-} from "../generated/templates/Offer/Offer";
+  Party as PartyContract,
+} from "../generated/templates/Party/Party";
 import {
-  Offer,
-  OfferFactory,
+  Party,
+  PartyFactory,
   Vesting,
   Claim,
   ERC20 as ERC20,
 } from "../generated/schema";
-import { Offer as OfferTemplate } from "../generated/templates";
+import { Party as PartyTemplate } from "../generated/templates";
 
-export function handleNewOffer(event: NewOffer): void {
+export function handleNewParty(event: NewParty): void {
   const factory = loadOrCreateFactory(event.address);
-  const offer = loadOrCreateOffer(event.params.offer);
+  const party = loadOrCreateParty(event.params.party);
 
-  const offerContract = OfferContract.bind(event.address);
+  const partyContract = PartyContract.bind(event.params.party);
 
-  const token = offerContract.token();
+  const token = partyContract.token();
   const tokenContract = ERC20Contract.bind(token);
 
   factory.count = factory.count + 1;
 
-  offer.createdAt = event.block.timestamp;
-  offer.factory = factory.id;
-  offer.name = "Vested " + tokenContract.name();
-  offer.symbol = "v" + tokenContract.symbol();
-  offer.token = buildERC20(token);
-  offer.merkleRoot = offerContract.merkleRoot();
-  offer.endAt = offerContract.offerEnd();
-  offer.upfrontPct = offerContract.upfrontVestingPct();
-  offer.vestingPeriod = offerContract.vestingPeriod();
-  offer.vestingDurationInPeriods = offerContract.vestingDuration();
-  offer.vestingCliffInPeriods = offerContract.vestingCliff();
+  party.createdAt = event.block.timestamp;
+  party.factory = factory.id;
+  party.name = "Vested " + tokenContract.name();
+  party.symbol = "v" + tokenContract.symbol();
+  party.token = buildERC20(token);
+  party.merkleRoot = partyContract.merkleRoot();
+  party.endAt = partyContract.partyEnd();
+  party.upfrontPct = partyContract.upfrontVestingPct();
+  party.vestingPeriod = partyContract.vestingPeriod();
+  party.vestingDurationInPeriods = partyContract.vestingDuration();
+  party.vestingCliffInPeriods = partyContract.vestingCliff();
 
   factory.save();
-  offer.save();
+  party.save();
 
-  OfferTemplate.create(event.params.offer);
+  PartyTemplate.create(event.params.party);
 }
 
-export function handleOfferClaimed(event: OfferClaimed): void {
+export function handlePartyJoined(event: PartyJoined): void {
   const vestingId = buildVestingId(event.address, event.params.tokenId);
   const vesting = loadOrCreateVesting(vestingId);
 
-  const offerContract = OfferContract.bind(event.address);
+  const partyContract = PartyContract.bind(event.address);
 
   vesting.tokenId = event.params.tokenId;
-  vesting.offer = event.address.toHex();
+  vesting.party = event.address.toHex();
   vesting.startTime = event.block.timestamp;
-  vesting.beneficiary = offerContract.getVestingBeneficiary(
+  vesting.beneficiary = partyContract.getVestingBeneficiary(
     event.params.tokenId
   );
-  vesting.amount = offerContract.getVestingAmount(event.params.tokenId);
+  vesting.amount = partyContract.getVestingAmount(event.params.tokenId);
   vesting.periodsClaimed = 0;
   vesting.amountClaimed = BigInt.fromI32(0);
 
@@ -69,12 +69,12 @@ export function handleVestingTokensClaimed(event: VestingTokensClaimed): void {
   const vestingId = buildVestingId(event.address, event.params.tokenId);
   const vesting = loadOrCreateVesting(vestingId);
 
-  const offerContract = OfferContract.bind(event.address);
+  const partyContract = PartyContract.bind(event.address);
 
-  vesting.amountClaimed = offerContract.getVestingAmountClaimed(
+  vesting.amountClaimed = partyContract.getVestingAmountClaimed(
     event.params.tokenId
   );
-  vesting.periodsClaimed = offerContract.getVestingPeriodsClaimed(
+  vesting.periodsClaimed = partyContract.getVestingPeriodsClaimed(
     event.params.tokenId
   );
 
@@ -90,7 +90,7 @@ export function handleVestingTokensClaimed(event: VestingTokensClaimed): void {
   claim.vesting = vesting.id;
   claim.createdAt = event.block.timestamp;
   claim.amount = event.params.amountVested;
-  claim.beneficiary = offerContract.getVestingBeneficiary(event.params.tokenId);
+  claim.beneficiary = partyContract.getVestingBeneficiary(event.params.tokenId);
 
   vesting.save();
   claim.save();
@@ -102,9 +102,9 @@ export function handleVestingBeneficiaryTransfered(
   const vestingId = buildVestingId(event.address, event.params.tokenId);
   const vesting = loadOrCreateVesting(vestingId);
 
-  const offerContract = OfferContract.bind(event.address);
+  const partyContract = PartyContract.bind(event.address);
 
-  vesting.beneficiary = offerContract.getVestingBeneficiary(
+  vesting.beneficiary = partyContract.getVestingBeneficiary(
     event.params.tokenId
   );
 
@@ -121,20 +121,20 @@ function loadOrCreateVesting(vestingId: string): Vesting {
   return vesting!;
 }
 
-function loadOrCreateOffer(address: Address): Offer {
-  let offer = Offer.load(address.toHex());
-  if (offer === null) {
-    offer = new Offer(address.toHex());
-    offer.address = address;
+function loadOrCreateParty(address: Address): Party {
+  let party = Party.load(address.toHex());
+  if (party === null) {
+    party = new Party(address.toHex());
+    party.address = address;
   }
-  return offer!;
+  return party!;
 }
 
-function loadOrCreateFactory(address: Address): OfferFactory {
-  let factory = OfferFactory.load("1");
+function loadOrCreateFactory(address: Address): PartyFactory {
+  let factory = PartyFactory.load("1");
   // if no factory yet, set up empty
   if (factory === null) {
-    factory = new OfferFactory("1");
+    factory = new PartyFactory("1");
     factory.address = address;
     factory.count = 0;
   }
@@ -156,14 +156,14 @@ function buildERC20(address: Address): string {
   return token.id;
 }
 
-function buildVestingId(offer: Address, tokenId: BigInt): string {
-  return offer.toHexString() + "-nft-" + tokenId.toString();
+function buildVestingId(party: Address, tokenId: BigInt): string {
+  return party.toHexString() + "-nft-" + tokenId.toString();
 }
 
 function buildClaimId(
-  offer: Address,
+  party: Address,
   tokenId: BigInt,
   logIndex: string
 ): string {
-  return offer.toHexString() + "-nft-" + tokenId.toString() + "-" + logIndex;
+  return party.toHexString() + "-nft-" + tokenId.toString() + "-" + logIndex;
 }

@@ -18,9 +18,7 @@ graph codegen
 
 # Prepare subgraph name
 FULLNAME=$USER/$NAME-$NETWORK
-if [ "$STAGING" ]; then
-  FULLNAME=$FULLNAME-staging
-fi
+
 echo ''
 echo '> Deploying subgraph: '$FULLNAME
 

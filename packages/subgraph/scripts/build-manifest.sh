@@ -2,14 +2,7 @@
 
 NETWORK=$1
 
-if [ "$STAGING" ]
-then
-  FILE=$NETWORK'-staging.json'
-else
-  FILE=$NETWORK'.json'
-fi
-
-DATA=manifest/data/$FILE
+DATA=manifest/data/$NETWORK'.json'
 
 HARDHAT_PACKAGE=$(node -e 'console.log(require("path").dirname(require.resolve("@scaffold-eth/hardhat/package.json")))')
 

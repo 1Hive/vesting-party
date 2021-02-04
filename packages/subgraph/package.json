@@ -5,17 +5,17 @@
   "scripts": {
     "codegen": "graph codegen",
     "build": "graph build",
-    "deploy": "graph deploy --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ 1hive/vesting",
-    "create-local": "graph create --node http://localhost:8020/ 1hive/vesting",
-    "remove-local": "graph remove --node http://localhost:8020/ 1hive/vesting",
-    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 1hive/vesting",
+    "deploy": "graph deploy --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/ 1hive/vesting-party",
+    "create-local": "graph create --node http://localhost:8020/ 1hive/vesting-party",
+    "remove-local": "graph remove --node http://localhost:8020/ 1hive/vesting-party",
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 1hive/vesting-party",
     "manifest-local": "scripts/build-manifest.sh hardhat",
     "manifest-mainnet": "scripts/build-manifest.sh mainnet",
     "manifest-rinkeby": "scripts/build-manifest.sh rinkeby",
     "manifest-xdai": "scripts/build-manifest.sh xdai",
-    "deploy-mainnet": "scripts/deploy.sh 1hive mainnet",
-    "deploy-rinkeby": "scripts/deploy.sh 1hive rinkeby",
-    "deploy-xdai": "scripts/deploy.sh 1hive xdai"
+    "deploy-mainnet": "scripts/deploy.sh 1hive vesting-party mainnet",
+    "deploy-rinkeby": "scripts/deploy.sh 1hive vesting-party rinkeby",
+    "deploy-xdai": "scripts/deploy.sh 1hive vesting-party xdai"
   },
   "dependencies": {
     "@graphprotocol/graph-cli": "0.19.0",

@@ -26,7 +26,5 @@ contract PartyFactory {
         );
 
         emit NewParty(address(party));
-
-        return party;
     }
 }
