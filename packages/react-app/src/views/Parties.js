@@ -1,7 +1,10 @@
 import React from 'react'
+import { useAppState } from '../providers/AppState'
 
 function Parties() {
-  return <div>Parties</div>
+  const { factory } = useAppState()
+
+  return <div>{factory.id}</div>
 }
 
 export default Parties

@@ -1,5 +1,4 @@
 import React, { useCallback } from 'react'
-import { useHistory } from 'react-router-dom'
 import {
   Button,
   ButtonBase,
@@ -15,20 +14,12 @@ import { useCopyToClipboard } from '../../hooks/useCopyToClipboard'
 import { getNetworkName } from '../../utils/web3-utils'
 import { getProviderFromUseWalletId } from '../../ethereum-providers'
 
-import profileButtonSvg from '../../assets/profileButton.svg'
-
 function AccountScreenConnected({ onClosePopover, wallet }) {
   const theme = useTheme()
-  const history = useHistory()
   const copy = useCopyToClipboard()
 
   const networkName = getNetworkName()
   const providerInfo = getProviderFromUseWalletId(wallet.activated)
-
-  const goToProfile = useCallback(() => {
-    history.push('/profile')
-    onClosePopover()
-  }, [history, onClosePopover])
 
   const handleCopyAddress = useCallback(() => copy(wallet.account), [
     copy,
@@ -43,27 +34,6 @@ function AccountScreenConnected({ onClosePopover, wallet }) {
         padding: ${2 * GU}px;
       `}
     >
-      <ButtonBase
-        onClick={goToProfile}
-        external={false}
-        css={`
-          width: 100%;
-        `}
-      >
-        <div
-          css={`
-            color: ${theme.contentSecondary};
-            padding-bottom: ${2 * GU}px;
-            border-bottom: 1px solid ${theme.border};
-            display: flex;
-            align-items: center;
-            column-gap: ${1 * GU}px;
-          `}
-        >
-          <img src={profileButtonSvg} alt="" width="24" height="24" />
-          <span>My profile</span>
-        </div>
-      </ButtonBase>
       <div
         css={`
           padding-top: ${2 * GU}px;

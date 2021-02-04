@@ -1,9 +1,32 @@
+import env from '../environment'
 import { getDefaultChain } from '../local-settings'
 
 const DEFAULT_LOCAL_CHAIN = ''
 
+export function getUseWalletProviders() {
+  const providers = [{ id: 'injected' }]
+
+  if (env('FORTMATIC_API_KEY')) {
+    providers.push({
+      id: 'fortmatic',
+      useWalletConf: { apiKey: env('FORTMATIC_API_KEY') },
+    })
+  }
+
+  return providers
+}
+
 export function isLocalOrUnknownNetwork(chainId = getDefaultChain()) {
   return getNetworkType(chainId) === DEFAULT_LOCAL_CHAIN
+}
+
+export function getUseWalletConnectors() {
+  return getUseWalletProviders().reduce((connectors, provider) => {
+    if (provider.useWalletConf) {
+      connectors[provider.id] = provider.useWalletConf
+    }
+    return connectors
+  }, {})
 }
 
 export function getNetworkType(chainId = getDefaultChain()) {
