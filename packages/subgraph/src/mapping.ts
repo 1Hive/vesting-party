@@ -9,6 +9,7 @@ import {
   Party as PartyContract,
 } from "../generated/templates/Party/Party";
 import {
+  User,
   Party,
   PartyFactory,
   Vesting,
@@ -36,6 +37,7 @@ export function handleNewParty(event: NewParty): void {
   party.vestingPeriod = partyContract.vestingPeriod();
   party.vestingDurationInPeriods = partyContract.vestingDuration();
   party.vestingCliffInPeriods = partyContract.vestingCliff();
+  party.totalAmountClaimed = BigInt.fromI32(0);
 
   factory.save();
   party.save();
@@ -46,17 +48,17 @@ export function handleNewParty(event: NewParty): void {
 export function handlePartyJoined(event: PartyJoined): void {}
 
 export function handleVestingAdded(event: VestingAdded): void {
+  const partyContract = PartyContract.bind(event.address);
+
   const vestingId = buildVestingId(event.address, event.params.tokenId);
   const vesting = loadOrCreateVesting(vestingId);
-
-  const partyContract = PartyContract.bind(event.address);
 
   vesting.tokenId = event.params.tokenId;
   vesting.party = event.address.toHex();
   vesting.startTime = event.block.timestamp;
-  vesting.beneficiary = partyContract.getVestingBeneficiary(
-    event.params.tokenId
-  );
+  vesting.beneficiary = partyContract
+    .getVestingBeneficiary(event.params.tokenId)
+    .toHex();
   vesting.amount = partyContract.getVestingAmount(event.params.tokenId);
   vesting.periodsClaimed = 0;
   vesting.amountClaimed = BigInt.fromI32(0);
@@ -65,14 +67,19 @@ export function handleVestingAdded(event: VestingAdded): void {
 }
 
 export function handleVestingTokensClaimed(event: VestingTokensClaimed): void {
+  const party = loadOrCreateParty(event.address);
+  const partyContract = PartyContract.bind(event.address);
+
   const vestingId = buildVestingId(event.address, event.params.tokenId);
   const vesting = loadOrCreateVesting(vestingId);
 
-  const partyContract = PartyContract.bind(event.address);
-
-  vesting.amountClaimed = partyContract.getVestingAmountClaimed(
+  const amountClaimed = partyContract.getVestingAmountClaimed(
     event.params.tokenId
   );
+
+  party.totalAmountClaimed = party.totalAmountClaimed.plus(amountClaimed);
+
+  vesting.amountClaimed = amountClaimed;
   vesting.periodsClaimed = partyContract.getVestingPeriodsClaimed(
     event.params.tokenId
   );
@@ -89,8 +96,11 @@ export function handleVestingTokensClaimed(event: VestingTokensClaimed): void {
   claim.vesting = vesting.id;
   claim.createdAt = event.block.timestamp;
   claim.amount = event.params.amountVested;
-  claim.beneficiary = partyContract.getVestingBeneficiary(event.params.tokenId);
+  claim.beneficiary = partyContract
+    .getVestingBeneficiary(event.params.tokenId)
+    .toHex();
 
+  party.save();
   vesting.save();
   claim.save();
 }
@@ -103,9 +113,9 @@ export function handleVestingBeneficiaryTransfered(
 
   const partyContract = PartyContract.bind(event.address);
 
-  vesting.beneficiary = partyContract.getVestingBeneficiary(
-    event.params.tokenId
-  );
+  vesting.beneficiary = partyContract
+    .getVestingBeneficiary(event.params.tokenId)
+    .toHex();
 
   vesting.save();
 }
@@ -116,6 +126,15 @@ function loadOrCreateVesting(vestingId: string): Vesting {
     vesting = new Vesting(vestingId);
   }
   return vesting!;
+}
+
+function loadOrCreateUser(address: Address): User {
+  let user = User.load(address.toHex());
+  if (user === null) {
+    user = new User(address.toHex());
+    user.address = address;
+  }
+  return user!;
 }
 
 function loadOrCreateParty(address: Address): Party {
