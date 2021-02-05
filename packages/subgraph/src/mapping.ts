@@ -13,7 +13,7 @@ import {
   PartyFactory,
   Vesting,
   Claim,
-  ERC20 as ERC20,
+  ERC20,
 } from "../generated/schema";
 import { Party as PartyTemplate } from "../generated/templates";
 
@@ -128,10 +128,10 @@ function loadOrCreateParty(address: Address): Party {
 }
 
 function loadOrCreateFactory(address: Address): PartyFactory {
-  let factory = PartyFactory.load("1");
+  let factory = PartyFactory.load(address.toHex());
   // if no factory yet, set up empty
   if (factory === null) {
-    factory = new PartyFactory("1");
+    factory = new PartyFactory(address.toHex());
     factory.address = address;
     factory.count = 0;
   }
