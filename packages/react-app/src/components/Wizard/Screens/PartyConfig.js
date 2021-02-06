@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react'
-import { Field, GU, TextInput, DropDown, Slider } from '@1hive/1hive-ui'
+import React from 'react'
+import { Field, GU, TextInput, Slider } from '@1hive/1hive-ui'
 import Header from '../Header'
 import Navigation from '../Navigation'
 import { useWizard } from '../../../providers/Wizard'
@@ -11,34 +11,17 @@ function PartyConfig({ title }) {
     onTokenChange,
     duration,
     onDurationChange,
-    selected,
-    onSelected,
     cliff,
     onCliffChange,
     upfront,
     onUpfrontChange,
   } = useWizard()
 
-  const inputRef = useRef(null)
-
-  useEffect(() => {
-    if (inputRef.current) {
-      setTimeout(() => {
-        // Component could have been unmounted on timeout
-        if (inputRef.current) {
-          inputRef.current.focus()
-        }
-      }, 1500)
-    }
-  }, [])
-
   return (
     <div>
       <Header title={title} />
       <div>
-        <div>
-          Here you will configure all you need to get your party started 🎉
-        </div>
+        <div>Here you will decide all the details of your hosted party.</div>
         <div
           css={`
             margin-top: ${3 * GU}px;
@@ -54,7 +37,7 @@ function PartyConfig({ title }) {
               value={token}
               onChange={onTokenChange}
               wide
-              ref={inputRef}
+              placeholder="0xcafe"
             />
           </Field>
           <div
@@ -74,21 +57,10 @@ function PartyConfig({ title }) {
                 value={duration}
                 onChange={onDurationChange}
                 wide
-                type="num"
+                type="number"
               />
             </Field>
-            <Field
-              label="Period of Time"
-              css={`
-                width: 100%;
-              `}
-            >
-              <DropDown
-                items={['Days', 'Weeks', 'Months']}
-                selected={selected}
-                onChange={onSelected}
-              />
-            </Field>
+            Days
           </div>
           <Field
             label="Cliff (On % of Duration)"
@@ -99,7 +71,7 @@ function PartyConfig({ title }) {
             <Slider value={cliff} onUpdate={onCliffChange} />
           </Field>
           <Field
-            label="Upfront Amount (On %)"
+            label="Upfront Token Amount (On %)"
             css={`
               width: 100%;
             `}

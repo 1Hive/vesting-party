@@ -1,5 +1,5 @@
 import React from 'react'
-import { useTheme } from '@1hive/ui'
+import { useTheme } from '@1hive/1hive-ui'
 import { WizardScreens } from './config'
 import { useWizard } from '../../providers/Wizard'
 

@@ -7,7 +7,6 @@ function WizardProvider({ children }) {
   const [step, setStep] = useState(0)
   const [token, setToken] = useState(null)
   const [duration, setDuration] = useState(0)
-  const [selected, setSelected] = useState(0)
   const [cliff, setCliff] = useState(0)
   const [upfront, setUpfront] = useState(0)
 
@@ -22,8 +21,6 @@ function WizardProvider({ children }) {
     []
   )
 
-  const onSelected = useCallback((value) => setSelected(value), [])
-
   const onCliffChange = useCallback((value) => setCliff(value), [])
 
   const onUpfrontChange = useCallback((value) => setUpfront(value), [])
@@ -37,8 +34,6 @@ function WizardProvider({ children }) {
         token,
         onTokenChange,
         duration,
-        selected,
-        onSelected,
         onDurationChange,
         cliff,
         onCliffChange,
