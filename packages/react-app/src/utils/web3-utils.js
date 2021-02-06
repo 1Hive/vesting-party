@@ -1,7 +1,7 @@
 import env from '../environment'
 import { getDefaultChain } from '../local-settings'
 
-const DEFAULT_LOCAL_CHAIN = ''
+const DEFAULT_LOCAL_CHAIN = 'private'
 
 export function getUseWalletProviders() {
   const providers = [{ id: 'injected' }]

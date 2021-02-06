@@ -1,4 +1,5 @@
 {
+  "proxy": "https://cors-anywhere.herokuapp.com/",
   "name": "@scaffold-eth/react-app",
   "version": "1.0.0",
   "homepage": ".",
@@ -15,12 +16,12 @@
     "react-scripts": "^4.0.2",
     "react-spring": "^8.0.27",
     "styled-components": "^5.2.1",
-    "urql": "^1.10.1",
+    "urql": "1.8.2",
     "use-wallet": "^0.5.0",
     "web3-utils": "^1.2.0"
   },
   "scripts": {
-    "start": "npm run sync-assets && react-app-rewired start",
+    "start": "cross-env HTTPS=true npm run sync-assets && react-app-rewired start",
     "start:local": "cross-env REACT_APP_CHAIN_ID=1337 yarn start",
     "start:rinkeby": "cross-env REACT_APP_CHAIN_ID=4 yarn start",
     "start:xdai": "cross-env REACT_APP_CHAIN_ID=100 yarn start",

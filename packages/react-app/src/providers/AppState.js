@@ -8,7 +8,7 @@ const AppStateContext = React.createContext()
 
 function AppStateProvider({ children }) {
   const factoryAddress = getNetwork().factory
-  const factory = useFactorySubscription(factoryAddress)
+  const { factory } = useFactorySubscription(factoryAddress)
 
   return (
     <AppStateContext.Provider value={{ factory }}>

@@ -16,7 +16,7 @@ const networks = {
     defaultEthNode: 'https://rinkeby.eth.aragon.network/',
     subgraph:
       'https://api.thegraph.com/subgraphs/name/1hive/vesting-party-rinkeby',
-    factory: '0x0cc9e3964f8d5da12dfcaec147d5368836306205',
+    factory: '0x4d85d70e1036bc05342b25e6a3ad520790ec6680',
   },
   xdai: {
     chainId: 100,

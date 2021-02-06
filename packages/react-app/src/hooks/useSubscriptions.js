@@ -1,5 +1,7 @@
+import { useMemo } from 'react'
 import { useQuery } from 'urql'
 import { PartyFactory } from '../queries'
+import { transformFactoryData } from '../utils/data-utils'
 
 function useQuerySub(query, variables = {}, options = {}) {
   return useQuery({
@@ -12,12 +14,17 @@ function useQuerySub(query, variables = {}, options = {}) {
 }
 
 export function useFactorySubscription(factoryAddress) {
-  const [{ data, error }] = useQuerySub(
-    PartyFactory,
-    factoryAddress.toLowerCase()
-  )
+  const [{ data, error }] = useQuerySub(PartyFactory, {
+    id: factoryAddress.toLowerCase(),
+  })
 
-  const factory = data?.partyFactory || null
+  const factory = useMemo(() => {
+    if (!data?.partyFactory) {
+      return null
+    }
+
+    return transformFactoryData(data.partyFactory)
+  }, [data])
 
   return { factory, fetching: !data && !error, error }
 }
