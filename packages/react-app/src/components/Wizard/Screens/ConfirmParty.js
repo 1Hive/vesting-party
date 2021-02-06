@@ -4,10 +4,9 @@ import Header from '../Header'
 import Navigation from '../Navigation'
 import { useWizard } from '../../../providers/Wizard'
 
-function PartyConfig({ title }) {
+function ConfirmParty({ title }) {
   const {
     onNext,
-    onBack,
     token,
     onTokenChange,
     duration,
@@ -22,10 +21,7 @@ function PartyConfig({ title }) {
     <div>
       <Header title={title} />
       <div>
-        <div>
-          Here you will check everything is correct with your party and sent a
-          blockchain transaction to create it.
-        </div>
+        <div>Here you will decide all the details of your hosted party.</div>
         <div
           css={`
             margin-top: ${3 * GU}px;
@@ -85,14 +81,9 @@ function PartyConfig({ title }) {
           </Field>
         </div>
       </div>
-      <Navigation
-        nextEnabled={true}
-        onNext={onNext}
-        showBack={true}
-        onBack={onBack}
-      />
+      <Navigation nextEnabled={true} onNext={onNext} showBack={false} />
     </div>
   )
 }
 
-export default PartyConfig
+export default ConfirmParty
