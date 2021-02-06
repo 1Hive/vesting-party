@@ -15,6 +15,7 @@ templates:
       language: wasm/assemblyscript
       entities:
         - Party
+        - User
         - Vesting
         - Claim
         - ERC20
@@ -24,7 +25,7 @@ templates:
       eventHandlers:
         - event: VestingAdded(indexed uint256)
           handler: handleVestingAdded
-        - event: PartyJoined(indexed uint256)
+        - event: PartyJoined(indexed address,uint256)
           handler: handlePartyJoined
         - event: VestingBeneficiaryTransfered(indexed uint256)
           handler: handleVestingTokensClaimed

@@ -7,12 +7,14 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const { deployer } = await getNamedAccounts()
 
-  await deploy('PartyFactory', {
+  await deploy('TestERC20', {
     from: deployer,
-    args: [],
+    args: ['Token', 'TKN', 10000],
     log: true,
     deterministicDeployment: true,
   })
 }
 
 export default func
+
+func.tags = ['token']

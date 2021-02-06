@@ -9,36 +9,35 @@ import {
   Party as PartyContract,
 } from "../generated/templates/Party/Party";
 import {
+  User,
   Party,
   PartyFactory,
   Vesting,
   Claim,
-  ERC20 as ERC20,
+  ERC20,
 } from "../generated/schema";
 import { Party as PartyTemplate } from "../generated/templates";
 
 export function handleNewParty(event: NewParty): void {
   const factory = loadOrCreateFactory(event.address);
   const party = loadOrCreateParty(event.params.party);
-
   const partyContract = PartyContract.bind(event.params.party);
 
   const token = partyContract.token();
-  const tokenContract = ERC20Contract.bind(token);
 
   factory.count = factory.count + 1;
 
   party.createdAt = event.block.timestamp;
   party.factory = factory.id;
-  party.name = "Vested " + tokenContract.name();
-  party.symbol = "v" + tokenContract.symbol();
   party.token = buildERC20(token);
   party.merkleRoot = partyContract.merkleRoot();
-  party.endAt = partyContract.partyEnd();
+  party.name = partyContract.name();
+  party.symbol = partyContract.symbol();
   party.upfrontPct = partyContract.upfrontVestingPct();
   party.vestingPeriod = partyContract.vestingPeriod();
   party.vestingDurationInPeriods = partyContract.vestingDuration();
   party.vestingCliffInPeriods = partyContract.vestingCliff();
+  party.totalAmountClaimed = BigInt.fromI32(0);
 
   factory.save();
   party.save();
@@ -46,18 +45,20 @@ export function handleNewParty(event: NewParty): void {
   PartyTemplate.create(event.params.party);
 }
 
-export function handlePartyJoined(event: PartyJoined): void {
+export function handlePartyJoined(event: PartyJoined): void {}
+
+export function handleVestingAdded(event: VestingAdded): void {
+  const partyContract = PartyContract.bind(event.address);
+
   const vestingId = buildVestingId(event.address, event.params.tokenId);
   const vesting = loadOrCreateVesting(vestingId);
-
-  const partyContract = PartyContract.bind(event.address);
 
   vesting.tokenId = event.params.tokenId;
   vesting.party = event.address.toHex();
   vesting.startTime = event.block.timestamp;
-  vesting.beneficiary = partyContract.getVestingBeneficiary(
-    event.params.tokenId
-  );
+  vesting.beneficiary = partyContract
+    .getVestingBeneficiary(event.params.tokenId)
+    .toHex();
   vesting.amount = partyContract.getVestingAmount(event.params.tokenId);
   vesting.periodsClaimed = 0;
   vesting.amountClaimed = BigInt.fromI32(0);
@@ -66,14 +67,19 @@ export function handlePartyJoined(event: PartyJoined): void {
 }
 
 export function handleVestingTokensClaimed(event: VestingTokensClaimed): void {
+  const party = loadOrCreateParty(event.address);
+  const partyContract = PartyContract.bind(event.address);
+
   const vestingId = buildVestingId(event.address, event.params.tokenId);
   const vesting = loadOrCreateVesting(vestingId);
 
-  const partyContract = PartyContract.bind(event.address);
-
-  vesting.amountClaimed = partyContract.getVestingAmountClaimed(
+  const amountClaimed = partyContract.getVestingAmountClaimed(
     event.params.tokenId
   );
+
+  party.totalAmountClaimed = party.totalAmountClaimed.plus(amountClaimed);
+
+  vesting.amountClaimed = amountClaimed;
   vesting.periodsClaimed = partyContract.getVestingPeriodsClaimed(
     event.params.tokenId
   );
@@ -90,8 +96,11 @@ export function handleVestingTokensClaimed(event: VestingTokensClaimed): void {
   claim.vesting = vesting.id;
   claim.createdAt = event.block.timestamp;
   claim.amount = event.params.amountVested;
-  claim.beneficiary = partyContract.getVestingBeneficiary(event.params.tokenId);
+  claim.beneficiary = partyContract
+    .getVestingBeneficiary(event.params.tokenId)
+    .toHex();
 
+  party.save();
   vesting.save();
   claim.save();
 }
@@ -104,14 +113,12 @@ export function handleVestingBeneficiaryTransfered(
 
   const partyContract = PartyContract.bind(event.address);
 
-  vesting.beneficiary = partyContract.getVestingBeneficiary(
-    event.params.tokenId
-  );
+  vesting.beneficiary = partyContract
+    .getVestingBeneficiary(event.params.tokenId)
+    .toHex();
 
   vesting.save();
 }
-
-export function handleVestingAdded(event: VestingAdded): void {}
 
 function loadOrCreateVesting(vestingId: string): Vesting {
   let vesting = Vesting.load(vestingId);
@@ -119,6 +126,15 @@ function loadOrCreateVesting(vestingId: string): Vesting {
     vesting = new Vesting(vestingId);
   }
   return vesting!;
+}
+
+function loadOrCreateUser(address: Address): User {
+  let user = User.load(address.toHex());
+  if (user === null) {
+    user = new User(address.toHex());
+    user.address = address;
+  }
+  return user!;
 }
 
 function loadOrCreateParty(address: Address): Party {
@@ -131,10 +147,10 @@ function loadOrCreateParty(address: Address): Party {
 }
 
 function loadOrCreateFactory(address: Address): PartyFactory {
-  let factory = PartyFactory.load("1");
+  let factory = PartyFactory.load(address.toHex());
   // if no factory yet, set up empty
   if (factory === null) {
-    factory = new PartyFactory("1");
+    factory = new PartyFactory(address.toHex());
     factory.address = address;
     factory.count = 0;
   }

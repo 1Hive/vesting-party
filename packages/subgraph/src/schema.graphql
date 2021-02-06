@@ -14,11 +14,11 @@ type Party @entity {
   symbol: String!
   token: ERC20!
   merkleRoot: Bytes!
-  endAt: BigInt!
   upfrontPct: BigInt!
   vestingPeriod: BigInt!
   vestingDurationInPeriods: Int!
   vestingCliffInPeriods: Int!
+  totalAmountClaimed: BigInt!
   vestings: [Vesting!] @derivedFrom(field: "party")
 }
 
@@ -27,7 +27,7 @@ type Vesting @entity {
   tokenId: BigInt!
   party: Party!
   startTime: BigInt!
-  beneficiary: Bytes!
+  beneficiary: User!
   amount: BigInt!
   periodsClaimed: Int!
   amountClaimed: BigInt!
@@ -38,8 +38,14 @@ type Claim @entity {
   id: ID!
   vesting: Vesting!
   createdAt: BigInt!
-  beneficiary: Bytes!
+  beneficiary: User!
   amount: BigInt!
+}
+
+type User @entity {
+  id: ID!
+  address: Bytes!
+  claims: [Claim!] @derivedFrom(field: "beneficiary")
 }
 
 type ERC20 @entity {
