@@ -26,7 +26,6 @@ function Header() {
         <div
           css={`
             height: ${8 * GU}px;
-            margin: 0 ${3 * GU}px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -82,7 +81,6 @@ function Header() {
             css={`
               display: flex;
               align-items: center;
-              ${!layoutSmall && `min-width: ${42.5 * GU}px`};
             `}
           >
             <AccountModule compact={layoutSmall} />

@@ -91,3 +91,37 @@ export const Party = gql`
     }
   }
 `
+
+export const User = gql`
+  query User($id: ID!) {
+    user(id: $id) {
+      id
+      address
+
+      claims {
+        id
+        createdAt
+        beneficiary
+        amount
+        vesting {
+          tokenId
+          party {
+            name
+
+            token {
+              id
+              name
+              symbol
+              decimals
+            }
+          }
+          startTime
+          beneficiary
+          amount
+          periodsClaimed
+          amountClaimed
+        }
+      }
+    }
+  }
+`

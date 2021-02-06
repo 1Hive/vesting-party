@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useQuery } from 'urql'
-import { PartyFactory, Parties, Party } from '../queries'
-import { transformPartyData } from '../utils/data-utils'
+import { PartyFactory, Parties, Party, User } from '../queries'
+import { transformPartyData, transformUserData } from '../utils/data-utils'
 
 function useQuerySub(query, variables = {}, options = {}) {
   return useQuery({
@@ -49,4 +49,18 @@ export function usePartySubscription(partyId) {
   }, [data])
 
   return { party, fetching: !data && !error, error }
+}
+
+export function useUserSubscription(account) {
+  const [{ data, error }] = useQuerySub(User, { id: account.toLowerCase() })
+
+  const user = useMemo(() => {
+    if (!data?.user) {
+      return null
+    }
+
+    return transformUserData(data.user)
+  }, [data])
+
+  return { user, fetching: !data && !error, error }
 }
