@@ -2,6 +2,7 @@ import React from 'react'
 import { GU, Link, useTheme, useViewport } from '@1hive/1hive-ui'
 import AccountModule from '../Account/AccountModule'
 import Layout from '../Layout'
+import { useWallet } from '../../providers/Wallet'
 
 import logoSvg from '../../assets/logo.svg'
 
@@ -9,6 +10,8 @@ function Header() {
   const theme = useTheme()
   const { below } = useViewport()
   const layoutSmall = below('medium')
+
+  const { account } = useWallet()
 
   return (
     <header
@@ -35,7 +38,7 @@ function Header() {
               align-items: center;
             `}
           >
-            <Link href="#/home" external={false}>
+            <Link href="#/parties" external={false}>
               <img src={logoSvg} height="28" alt="" />
             </Link>
             {!below('large') && (
@@ -49,15 +52,28 @@ function Header() {
                 `}
               >
                 <Link
-                  href="#/home"
+                  href="#/parties"
                   external={false}
                   css={`
                     text-decoration: none;
                     color: ${theme.contentSecondary};
+                    margin-right: ${3 * GU}px;
                   `}
                 >
                   Parties
                 </Link>
+                {account && (
+                  <Link
+                    href="#/mytokens"
+                    external={false}
+                    css={`
+                      text-decoration: none;
+                      color: ${theme.contentSecondary};
+                    `}
+                  >
+                    My tokens
+                  </Link>
+                )}
               </nav>
             )}
           </div>

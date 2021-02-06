@@ -1,11 +1,12 @@
 import React from 'react'
-import { Bar, GU } from '@1hive/1hive-ui'
-import { useAppState } from '../providers/AppState'
-import Party from '../components/Party'
+import { GU, LoadingRing, useTheme } from '@1hive/1hive-ui'
+import PartyCard from '../components/PartyCard'
+import TopBar from '../TopBar'
+import useFilteredParties from '../hooks/useFilteredParties'
 
 function Parties() {
-  const { factory } = useAppState()
-  const { parties = [] } = factory || {}
+  const { theme } = useTheme()
+  const { filteredParties, filters, loading } = useFilteredParties()
 
   return (
     <div
@@ -13,19 +14,36 @@ function Parties() {
         margin-top: ${4 * GU}px;
       `}
     >
-      <Bar>Filters</Bar>
-      <div
-        css={`
-          display: flex;
-          align-items: center;
-          column-gap: ${2 * GU}px;
-        `}
-      >
-        {parties.length > 0 &&
-          parties.map((party, index) => {
-            return <Party key={index} party={party} />
-          })}
-      </div>
+      <TopBar filters={filters} />
+
+      {loading ? (
+        <LoadingRing />
+      ) : (
+        <>
+          {filteredParties.length > 0 ? (
+            <div
+              css={`
+                display: flex;
+                align-items: center;
+                column-gap: ${2 * GU}px;
+              `}
+            >
+              {filteredParties.map((party, index) => {
+                return <PartyCard key={index} party={party} />
+              })}
+            </div>
+          ) : (
+            <div
+              css={`
+                width: 100%;
+                background: ${theme.background};
+              `}
+            >
+              No parties :(
+            </div>
+          )}
+        </>
+      )}
     </div>
   )
 }

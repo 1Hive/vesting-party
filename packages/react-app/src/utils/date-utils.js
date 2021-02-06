@@ -20,8 +20,8 @@ function dateFormat(date, format = 'onlyDate') {
   return dayjs(date).format(KNOWN_FORMATS[format] || format)
 }
 
-function durationTime(seconds) {
-  return dayjs.duration(seconds, 'seconds').humanize()
+function durationTime(ms) {
+  return dayjs.duration(ms).humanize()
 }
 
 export function noop() {}

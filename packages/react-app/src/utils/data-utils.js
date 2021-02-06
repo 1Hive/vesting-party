@@ -1,13 +1,6 @@
 import { toMs } from './date-utils'
 
-export function transformFactoryData(factory) {
-  return {
-    ...factory,
-    parties: factory.parties.map(transformPartyData),
-  }
-}
-
-function transformPartyData(party) {
+export function transformPartyData(party) {
   return {
     ...party,
     createdAt: toMs(party.createdAt),
