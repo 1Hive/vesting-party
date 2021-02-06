@@ -13,6 +13,10 @@ export function transformPartyData(party) {
   }
 }
 
+export function transformUserData(user) {
+  return { ...user, claims: user.claims.map(transformClaimData) }
+}
+
 function transformVestingData(vesting) {
   return {
     ...vesting,
@@ -20,7 +24,7 @@ function transformVestingData(vesting) {
     amount: BigInt(vesting.amount),
     periodsClaimed: parseInt(vesting.periodsClaimed),
     amountClaimed: BigInt(vesting.amountClaimed),
-    claims: vesting.claims.map(transformClaimData),
+    claims: vesting.claims?.map(transformClaimData) || null,
   }
 }
 
@@ -29,5 +33,6 @@ function transformClaimData(claim) {
     ...claim,
     createdAt: toMs(claim.createdAt),
     amount: BigInt(claim.amount),
+    vesting: claim.vesting ? transformVestingData(claim.vesting) : null,
   }
 }
