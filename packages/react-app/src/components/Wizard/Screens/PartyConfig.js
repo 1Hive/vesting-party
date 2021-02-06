@@ -1,8 +1,9 @@
-import React from 'react'
-import { Field, GU, TextInput, Slider } from '@1hive/1hive-ui'
+import React, { useMemo } from 'react'
+import { Field, GU, Info, TextInput, Slider } from '@1hive/1hive-ui'
 import Header from '../Header'
 import Navigation from '../Navigation'
 import { useWizard } from '../../../providers/Wizard'
+import { isAddress } from 'web3-utils'
 
 function PartyConfig({ title }) {
   const {
@@ -16,6 +17,17 @@ function PartyConfig({ title }) {
     upfront,
     onUpfrontChange,
   } = useWizard()
+
+  const errors = useMemo(() => {
+    const errors = []
+    if (token && !isAddress(token)) {
+      errors.push('Token must be a valid address')
+    }
+
+    return errors
+  }, [token])
+
+  const emptyValues = !token || !duration
 
   return (
     <div>
@@ -69,6 +81,7 @@ function PartyConfig({ title }) {
             `}
           >
             <Slider value={cliff} onUpdate={onCliffChange} />
+            <span>{Math.round(100 * cliff)} %</span>
           </Field>
           <Field
             label="Upfront Token Amount (On %)"
@@ -77,10 +90,28 @@ function PartyConfig({ title }) {
             `}
           >
             <Slider value={upfront} onUpdate={onUpfrontChange} />
+            <span>{Math.round(100 * upfront)} %</span>
           </Field>
         </div>
       </div>
-      <Navigation nextEnabled={''} onNext={onNext} showBack={false} />
+
+      {errors.length > 0 && (
+        <Info
+          mode="warning"
+          css={`
+            margin-bottom: ${2 * GU}px;
+          `}
+        >
+          {errors.map(error => {
+            return <div>{error}</div>
+          })}
+        </Info>
+      )}
+      <Navigation
+        nextEnabled={!emptyValues && errors.length === 0}
+        onNext={onNext}
+        showBack={false}
+      />
     </div>
   )
 }

@@ -10,20 +10,26 @@ function WizardProvider({ children }) {
   const [cliff, setCliff] = useState(0)
   const [upfront, setUpfront] = useState(0)
 
-  const onNext = useCallback(() => setStep((step) => step + 1), [])
+  const onNext = useCallback(() => setStep(step => step + 1), [])
 
-  const onBack = useCallback(() => setStep((step) => Math.max(0, step - 1)), [])
+  const onBack = useCallback(() => setStep(step => Math.max(0, step - 1)), [])
 
-  const onTokenChange = useCallback((event) => setToken(event.target.value), [])
+  const onTokenChange = useCallback(event => setToken(event.target.value), [])
 
   const onDurationChange = useCallback(
-    (event) => setDuration(event.target.value),
+    event => setDuration(parseInt(event.target.value)),
     []
   )
 
-  const onCliffChange = useCallback((value) => setCliff(value), [])
+  const onCliffChange = useCallback(
+    value => setCliff(Math.round(value * 100) / 100),
+    []
+  )
 
-  const onUpfrontChange = useCallback((value) => setUpfront(value), [])
+  const onUpfrontChange = useCallback(
+    value => setUpfront(Math.round(value * 100) / 100),
+    []
+  )
 
   return (
     <WizardContext.Provider
