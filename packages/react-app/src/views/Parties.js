@@ -1,7 +1,7 @@
 import React from 'react'
 import { GU, LoadingRing, useTheme } from '@1hive/1hive-ui'
 import PartyCard from '../components/PartyCard'
-import TopBar from '../TopBar'
+import TopBar from '../components/TopBar'
 import useFilteredParties from '../hooks/useFilteredParties'
 
 function Parties() {

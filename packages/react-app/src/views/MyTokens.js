@@ -43,7 +43,7 @@ function MyTokens() {
           `}
           fields={['Token', 'Claimed amount', 'price', 'Vested amount']}
           entries={
-            user?.claims.map(claim => {
+            user?.claims.map((claim) => {
               return {
                 token: claim.vesting.party.token.name,
                 claimedAmount: claim.amount,

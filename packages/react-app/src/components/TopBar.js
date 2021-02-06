@@ -1,10 +1,16 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Bar, Button, GU } from '@1hive/1hive-ui'
-import Filters from './components/Filters'
-import { useWallet } from './providers/Wallet'
+import Filters from './Filters'
+import { useWallet } from '../providers/Wallet'
+import Wizard from './Wizard/Wizard'
 
 function TopBar({ filters }) {
+  const [opened, setOpened] = useState(false)
   const { account } = useWallet()
+
+  const open = () => setOpened(true)
+  const close = () => setOpened(false)
+
   return (
     <Bar>
       <div
@@ -16,12 +22,9 @@ function TopBar({ filters }) {
         `}
       >
         {account ? <Filters filters={filters} /> : <div />}
-        <Button
-          label="Create party!"
-          mode="strong"
-          onClick={() => window.alert('Open wizard')}
-        />
+        <Button label="Create party!" mode="strong" onClick={open} />
       </div>
+      <Wizard opened={opened} close={close} />
     </Bar>
   )
 }
