@@ -12,6 +12,8 @@ import {
   TX_STATUS_FAILED,
 } from '../../Transaction/transaction-statuses'
 import { useFactoryContract } from '../../../hooks/useContract'
+import { writeAirtableData } from '../../../utils/airtable'
+import { getNetwork } from '../../../networks'
 
 const EMPTY_STATE = {
   signed: false,
@@ -26,7 +28,8 @@ function StartParty({ title }) {
   const [progress, setProgress] = useState(EMPTY_STATE)
   const [partyAddress, setPartyAddress] = useState(null)
   const [error, setError] = useState('')
-  const { settings } = useWizard()
+
+  const { settings, data } = useWizard()
   const factory = useFactoryContract(ethers)
 
   const status = useMemo(() => {
@@ -83,6 +86,8 @@ function StartParty({ title }) {
         .map((log) => factory.interface.parseLog(log))
         .find(({ name }) => name === 'NewParty')
 
+      writeAirtableData(args[0], getNetwork().chainId, data)
+
       setPartyAddress(args[0])
       setProgress((progress) => ({ ...progress, confirmed: true }))
     } catch (err) {
@@ -118,7 +123,6 @@ function StartParty({ title }) {
     ethers,
     ensureConfirmation,
     signTx,
-    partyAddress,
     progress.confirmed,
   ])
 
