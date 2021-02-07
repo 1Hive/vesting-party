@@ -24,7 +24,11 @@ function TopBar({ filters }) {
         `}
       >
         {account ? <Filters filters={filters} /> : <div />}
-        <Button label="Create party!" mode="strong" onClick={open} />
+        {account ? (
+          <Button label="Create party!" mode="strong" onClick={open} />
+        ) : (
+          <div />
+        )}
       </div>
       <Wizard opened={opened} close={close} />
     </Bar>

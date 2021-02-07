@@ -16,6 +16,7 @@ function ConfigParty({ title }) {
     onCliffChange,
     upfront,
     onUpfrontChange,
+    onDataChange,
   } = useWizard()
 
   const errors = useMemo(() => {
@@ -97,6 +98,7 @@ function ConfigParty({ title }) {
                 onChange={onCliffChange}
                 wide
                 type="number"
+                placeholder="0"
               />
             </Field>
             Days
@@ -109,6 +111,15 @@ function ConfigParty({ title }) {
           >
             <Slider value={upfront} onUpdate={onUpfrontChange} />
             <span>{Math.round(100 * upfront)} %</span>
+          </Field>
+          <Field
+            label="Json Data"
+            css={`
+              width: 100%;
+              margin-right: ${1.5 * GU}px;
+            `}
+          >
+            <TextInput onChange={onDataChange} wide type="file" />
           </Field>
         </div>
       </div>

@@ -122,6 +122,7 @@ function StartParty({ title }) {
     ensureConfirmation,
     signTx,
     partyAddress,
+    progress.confirmed,
   ])
 
   return (
