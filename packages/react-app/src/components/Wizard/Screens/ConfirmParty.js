@@ -2,6 +2,7 @@ import React, { useCallback } from 'react'
 import { Field, GU } from '@1hive/1hive-ui'
 import Header from '../Header'
 import Navigation from '../Navigation'
+import BalanceTree from '../../../utils/balance-tree'
 import { useWizard } from '../../../providers/Wizard'
 import { PCT_BASE } from '../../../constants'
 
@@ -13,21 +14,23 @@ function ConfirmParty({ title }) {
     duration,
     cliff,
     upfront,
+    data,
     onSettingsChange,
   } = useWizard()
 
   const handleStartParty = useCallback(() => {
+    const tree = new BalanceTree(data)
+
     onSettingsChange({
       token: token,
-      root:
-        '0xd6269acc7df5d5a44d0f7a89aea9f7d33b1ed6961f33685bfa57c5260052dd52',
+      root: tree.getHexRoot(),
       upfront: (BigInt(Math.round(100 * upfront)) * PCT_BASE) / BigInt(100),
       period: 0,
       duration: duration,
       cliff: cliff,
     })
     onNext()
-  }, [onNext, token, duration, cliff, upfront])
+  }, [onNext, token, duration, cliff, upfront, data, onSettingsChange])
 
   return (
     <div>

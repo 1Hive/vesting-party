@@ -9,7 +9,8 @@ function WizardProvider({ children }) {
   const [duration, setDuration] = useState(0)
   const [cliff, setCliff] = useState(0)
   const [upfront, setUpfront] = useState(0)
-  const [settings, setSettings] = useState(null)
+  const [settings, setSettings] = useState()
+  const [data, setData] = useState()
 
   const onNext = useCallback(() => setStep((step) => step + 1), [])
 
@@ -32,9 +33,12 @@ function WizardProvider({ children }) {
     []
   )
 
-  const onSettingsChange = useCallback((settings) => {
-    setSettings(settings)
-  }, [])
+  const onSettingsChange = useCallback((settings) => setSettings(settings), [])
+
+  const onDataChange = useCallback(
+    (event) => setData(event.target.files[0]),
+    []
+  )
 
   return (
     <WizardContext.Provider
@@ -50,6 +54,8 @@ function WizardProvider({ children }) {
         onCliffChange,
         upfront,
         onUpfrontChange,
+        data,
+        onDataChange,
         settings,
         onSettingsChange,
       }}
