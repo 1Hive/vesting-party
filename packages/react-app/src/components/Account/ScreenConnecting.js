@@ -18,7 +18,7 @@ const spin = keyframes`
   }
 `
 
-const AccountModuleConnectingScreen = React.memo(function ({
+const AccountModuleConnectingScreen = React.memo(function({
   onCancel,
   providerId,
 }) {
