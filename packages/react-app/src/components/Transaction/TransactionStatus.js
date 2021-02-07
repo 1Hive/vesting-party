@@ -42,7 +42,7 @@ function TransactionStatus({ status, error }) {
       iconColor: theme.contentSecondary,
       labelText: 'Waiting for signature…',
     }
-  }, [status, theme])
+  }, [error, status, theme])
 
   const failed =
     status === TX_STATUS_SIGNATURE_FAILED ||

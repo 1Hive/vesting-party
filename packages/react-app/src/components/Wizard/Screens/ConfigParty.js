@@ -120,7 +120,7 @@ function ConfigParty({ title }) {
             margin-bottom: ${2 * GU}px;
           `}
         >
-          {errors.map((error) => {
+          {errors.map(error => {
             return <div>{error}</div>
           })}
         </Info>

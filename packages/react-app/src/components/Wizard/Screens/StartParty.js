@@ -50,7 +50,7 @@ function StartParty({ title }) {
   }, [progress])
 
   const handleNextAttempt = useCallback(() => {
-    setAttempt((attempt) => attempt + 1)
+    setAttempt(attempt => attempt + 1)
   }, [])
 
   const signTx = useCallback(async () => {
@@ -64,38 +64,41 @@ function StartParty({ title }) {
         settings.cliff,
         { gasLimit: 9500000 }
       )
-      setProgress((progress) => ({
+      setProgress(progress => ({
         ...progress,
         signed: true,
       }))
       return tx
     } catch (err) {
       setError(err.message)
-      setProgress((progress) => ({ ...progress, errorSigning: true }))
+      setProgress(progress => ({ ...progress, errorSigning: true }))
     }
   }, [])
 
-  const ensureConfirmation = useCallback(async (signedTx) => {
-    try {
-      const recipt = await signedTx.wait()
+  const ensureConfirmation = useCallback(
+    async signedTx => {
+      try {
+        const recipt = await signedTx.wait()
 
-      const { args } = recipt.logs
-        .map((log) => factory.interface.parseLog(log))
-        .find(({ name }) => name === 'NewParty')
+        const { args } = recipt.logs
+          .map(log => factory.interface.parseLog(log))
+          .find(({ name }) => name === 'NewParty')
 
-      setPartyAddress(args[0])
-      setProgress((progress) => ({ ...progress, confirmed: true }))
-    } catch (err) {
-      setProgress((progress) => ({ ...progress, failed: true }))
-    }
-  }, [])
+        setPartyAddress(args[0])
+        setProgress(progress => ({ ...progress, confirmed: true }))
+      } catch (err) {
+        setProgress(progress => ({ ...progress, failed: true }))
+      }
+    },
+    [factory.interface]
+  )
 
   useEffect(() => {
     if (progress.confirmed) {
       return
     }
 
-    setProgress((progress) => ({
+    setProgress(progress => ({
       ...progress,
       errorSigning: false,
       failed: false,

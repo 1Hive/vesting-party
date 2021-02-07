@@ -11,28 +11,28 @@ function WizardProvider({ children }) {
   const [upfront, setUpfront] = useState(0)
   const [settings, setSettings] = useState(null)
 
-  const onNext = useCallback(() => setStep((step) => step + 1), [])
+  const onNext = useCallback(() => setStep(step => step + 1), [])
 
-  const onBack = useCallback(() => setStep((step) => Math.max(0, step - 1)), [])
+  const onBack = useCallback(() => setStep(step => Math.max(0, step - 1)), [])
 
-  const onTokenChange = useCallback((event) => setToken(event.target.value), [])
+  const onTokenChange = useCallback(event => setToken(event.target.value), [])
 
   const onDurationChange = useCallback(
-    (event) => setDuration(parseInt(event.target.value)),
+    event => setDuration(parseInt(event.target.value)),
     []
   )
 
   const onCliffChange = useCallback(
-    (event) => setCliff(parseInt(event.target.value)),
+    event => setCliff(parseInt(event.target.value)),
     []
   )
 
   const onUpfrontChange = useCallback(
-    (value) => setUpfront(Math.round(value * 100) / 100),
+    value => setUpfront(Math.round(value * 100) / 100),
     []
   )
 
-  const onSettingsChange = useCallback((settings) => {
+  const onSettingsChange = useCallback(settings => {
     setSettings(settings)
   }, [])
 

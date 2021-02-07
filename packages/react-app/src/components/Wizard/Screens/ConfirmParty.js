@@ -27,7 +27,7 @@ function ConfirmParty({ title }) {
       cliff: cliff,
     })
     onNext()
-  }, [onNext, token, duration, cliff, upfront])
+  }, [onNext, token, duration, cliff, onSettingsChange, upfront])
 
   return (
     <div>
