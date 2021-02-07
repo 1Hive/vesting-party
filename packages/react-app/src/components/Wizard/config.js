@@ -1,7 +1,9 @@
-import PartyConfig from './Screens/PartyConfig'
+import ConfigParty from './Screens/ConfigParty'
 import ConfirmParty from './Screens/ConfirmParty'
+import StartParty from './Screens/StartParty'
 
 export const WizardScreens = [
-  { Screen: PartyConfig, title: 'Get Your Party Started 🎉' },
-  { Screen: ConfirmParty, title: 'Confirm Your Party Details ✅' },
+  { Screen: ConfigParty, title: 'Get Your Party Started 🎉' },
+  { Screen: ConfirmParty, title: 'Confirm Party Details ✅' },
+  { Screen: StartParty, title: 'Sent Transaction 📡' },
 ]

@@ -8,7 +8,9 @@ function TopBar({ filters }) {
   const [opened, setOpened] = useState(false)
   const { account } = useWallet()
 
-  const open = () => setOpened(true)
+  const open = () => {
+    setOpened(true)
+  }
   const close = () => setOpened(false)
 
   return (

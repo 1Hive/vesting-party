@@ -24,8 +24,10 @@ function Parties() {
             <div
               css={`
                 display: flex;
+                flex-wrap: wrap;
                 align-items: center;
                 column-gap: ${2 * GU}px;
+                row-gap: ${2 * GU}px;
               `}
             >
               {filteredParties.map((party, index) => {

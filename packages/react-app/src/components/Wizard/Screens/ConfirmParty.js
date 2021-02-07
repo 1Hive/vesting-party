@@ -1,27 +1,42 @@
-import React from 'react'
-import { Field, GU, TextInput, Slider } from '@1hive/1hive-ui'
+import React, { useCallback } from 'react'
+import { Field, GU } from '@1hive/1hive-ui'
 import Header from '../Header'
 import Navigation from '../Navigation'
 import { useWizard } from '../../../providers/Wizard'
+import { PCT_BASE } from '../../../constants'
 
 function ConfirmParty({ title }) {
   const {
     onNext,
+    onBack,
     token,
-    onTokenChange,
     duration,
-    onDurationChange,
     cliff,
-    onCliffChange,
     upfront,
-    onUpfrontChange,
+    onSettingsChange,
   } = useWizard()
+
+  const handleStartParty = useCallback(() => {
+    onSettingsChange({
+      token: token,
+      root:
+        '0xd6269acc7df5d5a44d0f7a89aea9f7d33b1ed6961f33685bfa57c5260052dd52',
+      upfront: (BigInt(Math.round(100 * upfront)) * PCT_BASE) / BigInt(100),
+      period: 0,
+      duration: duration,
+      cliff: cliff,
+    })
+    onNext()
+  }, [onNext, token, duration, cliff, upfront])
 
   return (
     <div>
       <Header title={title} />
       <div>
-        <div>Here you will decide all the details of your hosted party.</div>
+        <div>
+          Here you will review the details of your party and sent a transaction
+          to start it.
+        </div>
         <div
           css={`
             margin-top: ${3 * GU}px;
@@ -33,12 +48,7 @@ function ConfirmParty({ title }) {
               width: 100%;
             `}
           >
-            <TextInput
-              value={token}
-              onChange={onTokenChange}
-              wide
-              placeholder="0xcafe"
-            />
+            {token}
           </Field>
           <div
             css={`
@@ -53,35 +63,32 @@ function ConfirmParty({ title }) {
                 margin-right: ${1.5 * GU}px;
               `}
             >
-              <TextInput
-                value={duration}
-                onChange={onDurationChange}
-                wide
-                type="number"
-                placeholder="0"
-              />
+              {duration} Days
             </Field>
-            Days
           </div>
           <Field
-            label="Cliff (On % of Duration)"
+            label="Cliff Duration"
             css={`
               width: 100%;
             `}
           >
-            <Slider value={cliff} onUpdate={onCliffChange} />
+            <span>{cliff} Days</span>
           </Field>
           <Field
-            label="Upfront Token Amount (On %)"
+            label="Upfront Token Amount"
             css={`
               width: 100%;
             `}
           >
-            <Slider value={upfront} onUpdate={onUpfrontChange} />
+            <span>{Math.round(100 * upfront)} %</span>
           </Field>
         </div>
       </div>
-      <Navigation nextEnabled={true} onNext={onNext} showBack={false} />
+      <Navigation
+        nextLabel="Start Party!"
+        onNext={handleStartParty}
+        onBack={onBack}
+      />
     </div>
   )
 }

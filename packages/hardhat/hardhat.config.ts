@@ -119,6 +119,7 @@ const config: HardhatUserConfig = {
   },
   namedAccounts: {
     deployer: 0,
+    tester: 1,
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS ? true : false,
@@ -157,11 +158,11 @@ task('start-party', 'Get the party started 🎉')
     const { deployments, getNamedAccounts } = hre
     const { execute } = deployments
 
-    const { deployer } = await getNamedAccounts()
+    const { deployer, tester } = await getNamedAccounts()
 
     const recipt = await execute(
       'PartyFactory',
-      { from: deployer, gasLimit: 9500000, log: true },
+      { from: tester, gasLimit: 9500000, log: true },
       'startParty',
       (await deployments.get('TestERC20')).address,
       root,
@@ -171,7 +172,10 @@ task('start-party', 'Get the party started 🎉')
       cliff
     )
 
-    const partyFactoryInterface = new hre.ethers.utils.Interface((await hre.artifacts.readArtifact('PartyFactory')).abi)
+    const partyFactoryInterface = new hre.ethers.utils.Interface([
+      'event NewParty(address)',
+    ])
+
     const { args } = recipt.logs
       .map((log) => partyFactoryInterface.parseLog(log))
       .find(({ name }) => name === 'NewParty')
@@ -356,8 +360,8 @@ async function addr(ethers, addr) {
 }
 
 task('accounts', 'Prints the list of accounts', async (_, { ethers }) => {
-  const accounts = await ethers.provider.listAccounts()
-  accounts.forEach((account) => console.log(account))
+  const accounts = await ethers.getSigners()
+  accounts.forEach((account) => console.log(account.address))
 })
 
 task('blockNumber', 'Prints the block number', async (_, { ethers }) => {
