@@ -121,7 +121,6 @@ function StartParty({ title }) {
     ethers,
     ensureConfirmation,
     signTx,
-    partyAddress,
     progress.confirmed,
   ])
 

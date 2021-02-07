@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useCallback, useMemo, useRef } from 'react'
 import { Field, GU, Info, TextInput, Slider } from '@1hive/1hive-ui'
 import Header from '../Header'
 import Navigation from '../Navigation'
@@ -19,6 +19,8 @@ function ConfigParty({ title }) {
     onDataChange,
   } = useWizard()
 
+  const fileReader = useRef(null)
+
   const errors = useMemo(() => {
     const errors = []
     if (token && !isAddress(token)) {
@@ -30,6 +32,25 @@ function ConfigParty({ title }) {
 
     return errors
   }, [token, duration, cliff])
+
+  const handleFileRead = useCallback(() => {
+    const content = fileReader.current.result
+    try {
+      const parsedContent = JSON.parse(content)
+      onDataChange(parsedContent)
+    } catch (err) {
+      console.error(`Failed uploading JSON file ${err}`)
+    }
+  }, [fileReader, onDataChange])
+
+  const handleJsonFileSelected = useCallback(
+    event => {
+      fileReader.current = new FileReader()
+      fileReader.current.onloadend = handleFileRead
+      fileReader.current.readAsText(event.target.files[0])
+    },
+    [handleFileRead]
+  )
 
   const emptyValues =
     (!token || !duration || !cliff) &&
@@ -119,7 +140,7 @@ function ConfigParty({ title }) {
               margin-right: ${1.5 * GU}px;
             `}
           >
-            <TextInput onChange={onDataChange} wide type="file" />
+            <TextInput onChange={handleJsonFileSelected} wide type="file" />
           </Field>
         </div>
       </div>
@@ -131,8 +152,8 @@ function ConfigParty({ title }) {
             margin-bottom: ${2 * GU}px;
           `}
         >
-          {errors.map(error => {
-            return <div>{error}</div>
+          {errors.map((error, index) => {
+            return <div key={index}>{error}</div>
           })}
         </Info>
       )}
