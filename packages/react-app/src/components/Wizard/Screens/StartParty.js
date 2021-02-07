@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Button, GU, Info, AddressField } from '@1hive/1hive-ui'
+import { Button, GU } from '@1hive/1hive-ui'
 import Header from '../Header'
 import { useWallet } from '../../../providers/Wallet'
 import { useWizard } from '../../../providers/Wizard'
@@ -24,9 +24,8 @@ function StartParty({ title }) {
   const { ethers } = useWallet()
   const [attempt, setAttempt] = useState(0)
   const [progress, setProgress] = useState(EMPTY_STATE)
-  const [partyAddress, setPartyAddress] = useState(null)
   const [error, setError] = useState('')
-  const { settings } = useWizard()
+  const { settings, onNext, onPartyAddressChange } = useWizard()
   const factory = useFactoryContract(ethers)
 
   const status = useMemo(() => {
@@ -84,13 +83,14 @@ function StartParty({ title }) {
           .map(log => factory.interface.parseLog(log))
           .find(({ name }) => name === 'NewParty')
 
-        setPartyAddress(args[0])
+        onPartyAddressChange(args[0])
         setProgress(progress => ({ ...progress, confirmed: true }))
+        onNext()
       } catch (err) {
         setProgress(progress => ({ ...progress, failed: true }))
       }
     },
-    [factory.interface]
+    [factory.interface, onNext, onPartyAddressChange]
   )
 
   useEffect(() => {
@@ -141,28 +141,6 @@ function StartParty({ title }) {
             text-align: center;
           `}
         >
-          {status === TX_STATUS_CONFIRMED && (
-            <>
-              <Info
-                css={`
-                  margin-bottom: ${3 * GU}px;
-                `}
-              >
-                Your party was created 🍾
-              </Info>
-              <div
-                css={`
-                  margin-top: ${3 * GU}px;
-                  margin-bottom: ${2 * GU}px;
-                  text-align: center;
-                `}
-              >
-                <AddressField address={partyAddress} />
-              </div>
-              This is the address where you will deposit the tokens to
-              distribute.
-            </>
-          )}
           {(status === TX_STATUS_FAILED ||
             status === TX_STATUS_SIGNATURE_FAILED) && (
             <Button label="Retry" mode="strong" onClick={handleNextAttempt} />
