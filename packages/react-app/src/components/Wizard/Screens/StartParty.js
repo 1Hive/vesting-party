@@ -27,12 +27,8 @@ function StartParty({ title }) {
   const [attempt, setAttempt] = useState(0)
   const [progress, setProgress] = useState(EMPTY_STATE)
   const [error, setError] = useState('')
-<<<<<<< HEAD
-  const { settings, onNext, onPartyAddressChange } = useWizard()
-=======
+  const { data, settings, onNext, onPartyAddressChange } = useWizard()
 
-  const { settings, data } = useWizard()
->>>>>>> wizard
   const factory = useFactoryContract(ethers)
 
   const status = useMemo(() => {
@@ -90,7 +86,6 @@ function StartParty({ title }) {
           .map(log => factory.interface.parseLog(log))
           .find(({ name }) => name === 'NewParty')
 
-    
         writeAirtableData(args[0], getNetwork().chainId, data)
 
         onPartyAddressChange(args[0])
@@ -100,7 +95,7 @@ function StartParty({ title }) {
         setProgress(progress => ({ ...progress, failed: true }))
       }
     },
-    [data,factory.interface, onNext, onPartyAddressChange]
+    [data, factory.interface, onNext, onPartyAddressChange]
   )
 
   useEffect(() => {
