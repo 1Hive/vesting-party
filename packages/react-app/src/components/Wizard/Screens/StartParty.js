@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Button, GU } from '@1hive/1hive-ui'
 import Header from '../Header'
-import { useWallet } from '../../../providers/Wallet'
 import { useWizard } from '../../../providers/Wizard'
 import TransactionStatus from '../../Transaction/TransactionStatus'
 import {
@@ -23,13 +22,12 @@ const EMPTY_STATE = {
 }
 
 function StartParty({ title }) {
-  const { ethers } = useWallet()
   const [attempt, setAttempt] = useState(0)
   const [progress, setProgress] = useState(EMPTY_STATE)
   const [error, setError] = useState('')
   const { data, settings, onNext, onPartyAddressChange } = useWizard()
 
-  const factory = useFactoryContract(ethers)
+  const factory = useFactoryContract()
 
   const status = useMemo(() => {
     if (progress.errorSigning) {
@@ -119,15 +117,7 @@ function StartParty({ title }) {
     }
 
     start()
-  }, [
-    error,
-    settings,
-    attempt,
-    ethers,
-    ensureConfirmation,
-    signTx,
-    progress.confirmed,
-  ])
+  }, [error, settings, attempt, ensureConfirmation, signTx, progress.confirmed])
 
   return (
     <div>

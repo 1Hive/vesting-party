@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Contract, AddressZero } from 'ethers'
-import { useWallet } from 'use-wallet'
 import { getNetwork } from '../networks'
+import { useWallet } from '../providers/Wallet'
 
 import factoryAbi from '../abis/PartyFactory.json'
 import merkleDistributorAbi from '../abis/MerkleDistributor.json'
