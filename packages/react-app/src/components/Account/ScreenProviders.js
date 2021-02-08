@@ -11,7 +11,7 @@ import {
 import { getProviderFromUseWalletId } from '../../ethereum-providers'
 import { getUseWalletProviders } from '../../utils/web3-utils'
 
-const PROVIDERS_INFO = getUseWalletProviders().map(provider => [
+const PROVIDERS_INFO = getUseWalletProviders().map((provider) => [
   provider.id,
   getProviderFromUseWalletId(provider.id),
 ])

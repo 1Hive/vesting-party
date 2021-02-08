@@ -44,7 +44,7 @@ function ConfigParty({ title }) {
   }, [fileReader, onDataChange])
 
   const handleJsonFileSelected = useCallback(
-    event => {
+    (event) => {
       fileReader.current = new FileReader()
       fileReader.current.onloadend = handleFileRead
       fileReader.current.readAsText(event.target.files[0])

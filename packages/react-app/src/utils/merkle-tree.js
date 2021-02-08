@@ -113,11 +113,11 @@ export default class MerkleTree {
   }
 
   static bufArrToHexArr(arr) {
-    if (arr.some(el => !Buffer.isBuffer(el))) {
+    if (arr.some((el) => !Buffer.isBuffer(el))) {
       throw new Error('Array is not an array of buffers')
     }
 
-    return arr.map(el => '0x' + el.toString('hex'))
+    return arr.map((el) => '0x' + el.toString('hex'))
   }
 
   static sortAndConcat(...args) {
