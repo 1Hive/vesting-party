@@ -16,6 +16,7 @@ function ConfigParty({ title }) {
     onCliffChange,
     upfront,
     onUpfrontChange,
+    data,
     onDataChange,
   } = useWizard()
 
@@ -44,7 +45,7 @@ function ConfigParty({ title }) {
   }, [fileReader, onDataChange])
 
   const handleJsonFileSelected = useCallback(
-    event => {
+    (event) => {
       fileReader.current = new FileReader()
       fileReader.current.onloadend = handleFileRead
       fileReader.current.readAsText(event.target.files[0])
@@ -53,7 +54,7 @@ function ConfigParty({ title }) {
   )
 
   const emptyValues =
-    (!token || !duration || !cliff) &&
+    (!token || !duration || !cliff || !data) &&
     (!token || !(Math.round(100 * upfront) === 100))
 
   return (
@@ -140,7 +141,12 @@ function ConfigParty({ title }) {
               margin-right: ${1.5 * GU}px;
             `}
           >
-            <TextInput onChange={handleJsonFileSelected} wide type="file" />
+            <TextInput
+              onChange={handleJsonFileSelected}
+              wide
+              type="file"
+              required
+            />
           </Field>
         </div>
       </div>
