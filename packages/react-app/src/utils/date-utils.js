@@ -26,6 +26,6 @@ function durationTime(ms) {
 
 export function noop() {}
 
-const toMs = (seconds) => parseInt(seconds) * 1000
+const toMs = seconds => parseInt(seconds) * 1000
 
 export { dayjs, dateFormat, durationTime, toMs }

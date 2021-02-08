@@ -72,7 +72,7 @@ const PROVIDERS = new Map(
         'your Ethereum provider': 'your provider',
       },
     },
-  ].map((provider) => [provider.id, provider])
+  ].map(provider => [provider.id, provider])
 )
 
 // Get a providers object for a given ID.

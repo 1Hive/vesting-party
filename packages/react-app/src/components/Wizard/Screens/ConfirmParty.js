@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react'
-import { Field, GU } from '@1hive/1hive-ui'
+import { Field, GU, TextInput } from '@1hive/1hive-ui'
 import Header from '../Header'
 import Navigation from '../Navigation'
 import BalanceTree from '../../../utils/balance-tree'
@@ -84,6 +84,23 @@ function ConfirmParty({ title }) {
             `}
           >
             <span>{Math.round(100 * upfront)} %</span>
+          </Field>
+          <Field
+            label="Balances"
+            css={`
+              width: 100%;
+            `}
+          >
+            <TextInput
+              multiline
+              disabled
+              wide
+              css={`
+                height: 180px;
+              `}
+            >
+              {JSON.stringify(data, 0, 2)}
+            </TextInput>
           </Field>
         </div>
       </div>

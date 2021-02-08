@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { Button, GU, Info, AddressField } from '@1hive/1hive-ui'
+import { Button, GU } from '@1hive/1hive-ui'
 import Header from '../Header'
 import { useWallet } from '../../../providers/Wallet'
 import { useWizard } from '../../../providers/Wizard'
@@ -26,10 +26,9 @@ function StartParty({ title }) {
   const { ethers } = useWallet()
   const [attempt, setAttempt] = useState(0)
   const [progress, setProgress] = useState(EMPTY_STATE)
-  const [partyAddress, setPartyAddress] = useState(null)
   const [error, setError] = useState('')
+  const { data, settings, onNext, onPartyAddressChange } = useWizard()
 
-  const { settings, data } = useWizard()
   const factory = useFactoryContract(ethers)
 
   const status = useMemo(() => {
@@ -53,7 +52,7 @@ function StartParty({ title }) {
   }, [progress])
 
   const handleNextAttempt = useCallback(() => {
-    setAttempt((attempt) => attempt + 1)
+    setAttempt(attempt => attempt + 1)
   }, [])
 
   const signTx = useCallback(async () => {
@@ -67,40 +66,44 @@ function StartParty({ title }) {
         settings.cliff,
         { gasLimit: 9500000 }
       )
-      setProgress((progress) => ({
+      setProgress(progress => ({
         ...progress,
         signed: true,
       }))
       return tx
     } catch (err) {
       setError(err.message)
-      setProgress((progress) => ({ ...progress, errorSigning: true }))
+      setProgress(progress => ({ ...progress, errorSigning: true }))
     }
   }, [])
 
-  const ensureConfirmation = useCallback(async (signedTx) => {
-    try {
-      const recipt = await signedTx.wait()
+  const ensureConfirmation = useCallback(
+    async signedTx => {
+      try {
+        const recipt = await signedTx.wait()
 
-      const { args } = recipt.logs
-        .map((log) => factory.interface.parseLog(log))
-        .find(({ name }) => name === 'NewParty')
+        const { args } = recipt.logs
+          .map(log => factory.interface.parseLog(log))
+          .find(({ name }) => name === 'NewParty')
 
-      writeAirtableData(args[0], getNetwork().chainId, data)
+        writeAirtableData(args[0], getNetwork().chainId, data)
 
-      setPartyAddress(args[0])
-      setProgress((progress) => ({ ...progress, confirmed: true }))
-    } catch (err) {
-      setProgress((progress) => ({ ...progress, failed: true }))
-    }
-  }, [])
+        onPartyAddressChange(args[0])
+        setProgress(progress => ({ ...progress, confirmed: true }))
+        onNext()
+      } catch (err) {
+        setProgress(progress => ({ ...progress, failed: true }))
+      }
+    },
+    [data, factory.interface, onNext, onPartyAddressChange]
+  )
 
   useEffect(() => {
     if (progress.confirmed) {
       return
     }
 
-    setProgress((progress) => ({
+    setProgress(progress => ({
       ...progress,
       errorSigning: false,
       failed: false,
@@ -143,28 +146,6 @@ function StartParty({ title }) {
             text-align: center;
           `}
         >
-          {status === TX_STATUS_CONFIRMED && (
-            <>
-              <Info
-                css={`
-                  margin-bottom: ${3 * GU}px;
-                `}
-              >
-                Your party was created 🍾
-              </Info>
-              <div
-                css={`
-                  margin-top: ${3 * GU}px;
-                  margin-bottom: ${2 * GU}px;
-                  text-align: center;
-                `}
-              >
-                <AddressField address={partyAddress} />
-              </div>
-              This is the address where you will deposit the tokens to
-              distribute.
-            </>
-          )}
           {(status === TX_STATUS_FAILED ||
             status === TX_STATUS_SIGNATURE_FAILED) && (
             <Button label="Retry" mode="strong" onClick={handleNextAttempt} />

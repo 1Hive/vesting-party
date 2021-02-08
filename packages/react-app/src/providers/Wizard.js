@@ -9,36 +9,48 @@ function WizardProvider({ children }) {
   const [duration, setDuration] = useState(0)
   const [cliff, setCliff] = useState(0)
   const [upfront, setUpfront] = useState(0)
-  const [settings, setSettings] = useState()
-  const [data, setData] = useState()
+  const [settings, setSettings] = useState(null)
+  const [data, setData] = useState(null)
+  const [partyAddress, setPartyAddress] = useState('')
 
-  const onNext = useCallback(() => setStep((step) => step + 1), [])
+  const onNext = useCallback(() => setStep(step => step + 1), [])
 
-  const onBack = useCallback(() => setStep((step) => Math.max(0, step - 1)), [])
+  const onBack = useCallback(() => setStep(step => Math.max(0, step - 1)), [])
 
-  const onTokenChange = useCallback((event) => setToken(event.target.value), [])
+  const onTokenChange = useCallback(event => setToken(event.target.value), [])
 
   const onDurationChange = useCallback(
-    (event) => setDuration(parseInt(event.target.value)),
+    event => setDuration(parseInt(event.target.value)),
     []
   )
 
   const onCliffChange = useCallback(
-    (event) => setCliff(parseInt(event.target.value)),
+    event => setCliff(parseInt(event.target.value)),
     []
   )
 
   const onUpfrontChange = useCallback(
-    (value) => setUpfront(Math.round(value * 100) / 100),
+    value => setUpfront(Math.round(value * 100) / 100),
     []
   )
 
-  const onSettingsChange = useCallback((settings) => setSettings(settings), [])
+  const onSettingsChange = useCallback(settings => setSettings(settings), [])
 
-  const onDataChange = useCallback(
-    (event) => setData(event.target.files[0]),
+  const onDataChange = useCallback(data => setData(data), [])
+  const onPartyAddressChange = useCallback(
+    address => setPartyAddress(address),
     []
   )
+
+  const resetData = useCallback(() => {
+    setStep(0)
+    setToken('')
+    setDuration(0)
+    setCliff(0)
+    setUpfront(0)
+    setSettings(null)
+    setData(null)
+  }, [])
 
   return (
     <WizardContext.Provider
@@ -58,6 +70,9 @@ function WizardProvider({ children }) {
         onDataChange,
         settings,
         onSettingsChange,
+        partyAddress,
+        onPartyAddressChange,
+        resetData,
       }}
     >
       {children}
