@@ -38,15 +38,18 @@ export function writeAirtableData(party, chainId, data) {
 export function readAirtableUser(party, chainId, account) {
   base('data')
     .select({
-      // Selecting the first 3 records in Grid view:
       maxRecords: 1,
       view: 'Grid view',
       fields: ['id', 'index', 'account', 'amount'],
       filterByFormula: `id = '${party}:${chainId}:${account}'`,
     })
-    .firstPage(
+    .eachPage(
       function page(records) {
-        return records[0]
+        return {
+          index: records[0].get('index'),
+          account: records[0].get('account'),
+          amount: records[0].get('amount'),
+        }
       },
       function done(err) {
         if (err) {
