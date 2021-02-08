@@ -31,6 +31,7 @@ export function handleNewParty(event: NewParty): void {
   party.factory = factory.id;
   party.host = event.transaction.from;
   party.token = buildERC20(token);
+  party.distributor = partyContract.merkleDistributor();
   party.merkleRoot = partyContract.merkleRoot();
   party.name = partyContract.name();
   party.symbol = partyContract.symbol();
