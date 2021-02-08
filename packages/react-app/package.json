@@ -5,6 +5,7 @@
   "homepage": ".",
   "dependencies": {
     "@1hive/1hive-ui": "^1.0.2",
+    "airtable": "^0.10.1",
     "clipboard-polyfill": "^3.0.0-pre5",
     "customize-cra": "^1.0.0",
     "dayjs": "^1.8.34",
