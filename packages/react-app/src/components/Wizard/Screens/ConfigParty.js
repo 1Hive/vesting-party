@@ -53,8 +53,7 @@ function ConfigParty({ title }) {
   )
 
   const emptyValues =
-    (!token || !duration || !cliff) &&
-    (!token || !(Math.round(100 * upfront) === 100))
+    (!token || !duration) && (!token || !(Math.round(100 * upfront) === 100))
 
   return (
     <div>
