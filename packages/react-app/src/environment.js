@@ -6,6 +6,9 @@ const ENV_VARS = {
     const chainId = parseInt(process.env.REACT_APP_CHAIN_ID)
     return isNaN(chainId) ? DEFAULT_CHAIN_ID : chainId
   },
+  AIRTABLE_KEY() {
+    return process.env.REACT_APP_AIRTABLE_KEY
+  },
 }
 
 export default function env(name) {
