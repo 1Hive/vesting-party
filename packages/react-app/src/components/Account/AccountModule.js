@@ -49,14 +49,14 @@ function AccountModule({ compact }) {
 
   const clearError = useCallback(() => setActivationError(null), [])
 
-  const toggle = useCallback(() => setOpened(opened => !opened), [])
+  const toggle = useCallback(() => setOpened((opened) => !opened), [])
 
   const handleCancelConnection = useCallback(() => {
     wallet.deactivate()
   }, [wallet])
 
   const activate = useCallback(
-    async providerId => {
+    async (providerId) => {
       try {
         await wallet.activate(providerId)
       } catch (error) {
@@ -108,7 +108,7 @@ function AccountModule({ compact }) {
       return 'providers'
     })()
 
-    const screenIndex = SCREENS.findIndex(screen => screen.id === screenId)
+    const screenIndex = SCREENS.findIndex((screen) => screen.id === screenId)
     const direction = previousScreenIndex.current > screenIndex ? -1 : 1
 
     previousScreenIndex.current = screenIndex
@@ -120,7 +120,7 @@ function AccountModule({ compact }) {
   const screenId = screen.id
 
   const handlePopoverClose = useCallback(
-    reject => {
+    (reject) => {
       if (screenId === 'connecting' || screenId === 'error') {
         // reject closing the popover
         return false

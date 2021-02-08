@@ -19,7 +19,7 @@ function Wizard({ opened, close }) {
   )
 }
 
-export default props => (
+export default (props) => (
   <WizardProvider>
     <Wizard {...props} />
   </WizardProvider>
