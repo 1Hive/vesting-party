@@ -17,6 +17,8 @@ docker/**/data
 
 packages/subgraph/config/config.json
 
+packages/react-app/public
+
 # dependencies
 /node_modules
 /.pnp

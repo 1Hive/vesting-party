@@ -15,6 +15,7 @@ templates:
       language: wasm/assemblyscript
       entities:
         - Party
+        - User
         - Vesting
         - Claim
         - ERC20
