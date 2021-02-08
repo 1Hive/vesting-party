@@ -3,10 +3,8 @@ import { Contract, AddressZero } from 'ethers'
 import { useWallet } from 'use-wallet'
 import { getNetwork } from '../networks'
 
-const FACTORY_ABI = [
-  'function startParty(address,bytes32,uint64,uint8,uint16,uint16) public returns (address)',
-  'event NewParty(address)',
-]
+import factoryAbi from '../abis/PartyFactory.json'
+import merkleDistributorAbi from '../abis/MerkleDistributor.json'
 
 // account is not optional
 export function getSigner(ethersProvider, account) {
@@ -34,31 +32,30 @@ export function getContract(address, ABI, ethersProvider, account) {
 
 // account is optional
 // returns null on errors
-function useContract(
-  address,
-  ABI,
-  ethersProvider,
-  withSignerIfPossible = true
-) {
-  const { account } = useWallet()
+function useContract(address, ABI, withSignerIfPossible = true) {
+  const { account, ethers } = useWallet()
 
   return useMemo(() => {
-    if (!address || !ABI || !ethersProvider) return null
+    if (!address || !ABI || !ethers) return null
     try {
       return getContract(
         address,
         ABI,
-        ethersProvider,
+        ethers,
         withSignerIfPossible && account ? account : undefined
       )
     } catch (error) {
       console.error('Failed to get contract', error)
       return null
     }
-  }, [address, ABI, ethersProvider, withSignerIfPossible, account])
+  }, [address, ABI, ethers, withSignerIfPossible, account])
 }
 
-export function useFactoryContract(ethersProvider, withSignerIfPossible) {
+export function useFactoryContract() {
   const { factory } = getNetwork()
-  return useContract(factory, FACTORY_ABI, ethersProvider, withSignerIfPossible)
+  return useContract(factory, factoryAbi)
+}
+
+export function useMerkleDistributorContract(merkleDistributorAddress) {
+  return useContract(merkleDistributorAddress, merkleDistributorAbi)
 }

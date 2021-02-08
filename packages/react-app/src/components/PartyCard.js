@@ -2,10 +2,15 @@ import React, { useCallback, useMemo } from 'react'
 import { useHistory } from 'react-router-dom'
 import { GU, textStyle, useTheme } from '@1hive/1hive-ui'
 import partySvg from '../assets/party.svg'
+import { useWallet } from '../providers/Wallet'
+import { useUserClaimData } from '../hooks/useUserClaim'
 
 function PartyCard({ party }) {
   const theme = useTheme()
   const history = useHistory()
+  const { account } = useWallet()
+
+  const claimInfo = useUserClaimData(account, party.id)
 
   const handleSelect = useCallback(() => {
     history.push(`/party/${party.id}`)
