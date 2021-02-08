@@ -10,12 +10,13 @@ Airtable.configure({
 const base = Airtable.base('appoEtN1RpO4eniQJ')
 
 export function writeAirtableData(party, chainId, data) {
-  data.map((user) =>
+  data.map((user, index) =>
     base('data').create(
       [
         {
           fields: {
             id: `${party}:${chainId}:${user.account}`,
+            index: index,
             account: user.account,
             amount: user.amount,
           },
@@ -34,18 +35,18 @@ export function writeAirtableData(party, chainId, data) {
   )
 }
 
-export function readAirtableAmount(party, chainId, account) {
+export function readAirtableUser(party, chainId, account) {
   base('data')
     .select({
       // Selecting the first 3 records in Grid view:
       maxRecords: 1,
       view: 'Grid view',
-      fields: ['id', 'amount'],
+      fields: ['id', 'index', 'account', 'amount'],
       filterByFormula: `id = '${party}:${chainId}:${account}'`,
     })
     .firstPage(
       function page(records) {
-        return records[0].get('amount')
+        return records[0]
       },
       function done(err) {
         if (err) {

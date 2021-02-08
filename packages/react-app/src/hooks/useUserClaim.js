@@ -1,58 +1,29 @@
 import { useEffect, useState } from 'react'
 import { getNetwork } from '../networks'
-import { readAirtableAmount } from '../utils/airtable'
+import { readAirtableUser } from '../utils/airtable'
 import { useMerkleDistributorContract } from './useContract'
-
-// const CLAIM_PROMISES = {}
-
-// // returns the claim for the given address, or null if not valid
-// function fetchClaim(account, chainId) {
-//   const formatted = isAddress(account)
-//   if (!formatted) return Promise.reject(new Error('Invalid address'))
-//   const key = `${chainId}:${account}`
-
-//   return (CLAIM_PROMISES[key] =
-//     CLAIM_PROMISES[key] ??
-//     fetch(
-//       `https://gentle-frost-9e74.uniswap.workers.dev/${chainId}/${formatted}`
-//     )
-//       .then((res) => {
-//         if (res.status === 200) {
-//           return res.json()
-//         } else {
-//           console.debug(
-//             `No claim for account ${formatted} on chain ID ${chainId}`
-//           )
-//           return null
-//         }
-//       })
-//       .catch((error) => {
-//         console.error('Failed to get claim data', error)
-//       }))
-// }
 
 // parse distributorContract blob and detect if user has claim data
 // null means we know it does not
-export function useUserClaimData(account, partyAddress) {
+export function useUserClaimInfo(partyAddress, account) {
   const chainId = getNetwork().chainId
 
-  const key = `${chainId}:${account}`
+  const key = `${partyAddress}:${chainId}:${account}`
   const [claimInfo, setClaimInfo] = useState({})
 
   useEffect(() => {
-    if (!account || !chainId) return
-    readAirtableAmount(partyAddress, chainId, account).then(
-      (accountClaimInfo) =>
-        setClaimInfo((claimInfo) => {
-          return {
-            ...claimInfo,
-            [key]: accountClaimInfo,
-          }
-        })
+    if (!partyAddress || !account || !chainId) return
+    readAirtableUser(partyAddress, chainId, account).then((accountClaimInfo) =>
+      setClaimInfo((claimInfo) => {
+        return {
+          ...claimInfo,
+          [key]: accountClaimInfo,
+        }
+      })
     )
-  }, [account, chainId, key, partyAddress])
+  }, [account, chainId, partyAddress, key])
 
-  return account && chainId ? claimInfo[key] : undefined
+  return partyAddress && account && chainId ? claimInfo : undefined
 }
 
 function useSingleCallResult(contract, fn, args) {
@@ -84,35 +55,36 @@ function useSingleCallResult(contract, fn, args) {
 
 // check if user is in blob and has not yet claimed UNI
 export function useUserHasAvailableClaim(
-  account,
   partyAddress,
+  account,
   distributorAddress
 ) {
-  const userClaimData = useUserClaimData(account, partyAddress)
+  const userClaimInfo = useUserClaimInfo(partyAddress, account)
   const distributorContract = useMerkleDistributorContract(distributorAddress)
   const isClaimedResult = useSingleCallResult(
     distributorContract,
     'isClaimed',
-    [userClaimData?.index]
+    [BigInt(userClaimInfo?.index)]
   )
   // user is in blob and contract marks as unclaimed
-  return Boolean(userClaimData && !isClaimedResult === false)
+  return Boolean(userClaimInfo && !isClaimedResult === false)
 }
 
 export function useUserUnclaimedAmount(
-  account,
   partyAddress,
+  account,
   distributorAddress
 ) {
-  const userClaimData = useUserClaimData(account, partyAddress)
+  const userClaimInfo = useUserClaimInfo(partyAddress, account)
   const canClaim = useUserHasAvailableClaim(
-    account,
     partyAddress,
+    account,
+    userClaimInfo.index,
     distributorAddress
   )
 
-  if (!canClaim || !userClaimData) {
+  if (!canClaim || !userClaimInfo.amount) {
     return BigInt(0)
   }
-  return BigInt(userClaimData.amount)
+  return BigInt(userClaimInfo.amount)
 }
