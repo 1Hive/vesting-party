@@ -3,14 +3,14 @@ import { useHistory } from 'react-router-dom'
 import { GU, textStyle, useTheme } from '@1hive/1hive-ui'
 import partySvg from '../assets/party.svg'
 import { useWallet } from '../providers/Wallet'
-import { useUserClaimData } from '../hooks/useUserClaim'
+import { useUserUnclaimedAmount } from '../hooks/useUserClaim'
 
 function PartyCard({ party }) {
   const theme = useTheme()
   const history = useHistory()
   const { account } = useWallet()
 
-  const claimInfo = useUserClaimData(account, party.id)
+  const amount = useUserUnclaimedAmount(account, party.id, party.distributor)
 
   const handleSelect = useCallback(() => {
     history.push(`/party/${party.id}`)
@@ -97,6 +97,7 @@ function PartyCard({ party }) {
           0
         </div>
       </div>
+      {amount && <span>Unclaimed amount: {amount?.toString()}</span>}
     </div>
   )
 }

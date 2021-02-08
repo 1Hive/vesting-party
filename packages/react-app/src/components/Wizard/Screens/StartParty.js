@@ -52,7 +52,7 @@ function StartParty({ title }) {
   }, [progress])
 
   const handleNextAttempt = useCallback(() => {
-    setAttempt(attempt => attempt + 1)
+    setAttempt((attempt) => attempt + 1)
   }, [])
 
   const signTx = useCallback(async () => {
@@ -66,33 +66,33 @@ function StartParty({ title }) {
         settings.cliff,
         { gasLimit: 9500000 }
       )
-      setProgress(progress => ({
+      setProgress((progress) => ({
         ...progress,
         signed: true,
       }))
       return tx
     } catch (err) {
       setError(err.message)
-      setProgress(progress => ({ ...progress, errorSigning: true }))
+      setProgress((progress) => ({ ...progress, errorSigning: true }))
     }
   }, [])
 
   const ensureConfirmation = useCallback(
-    async signedTx => {
+    async (signedTx) => {
       try {
         const recipt = await signedTx.wait()
 
         const { args } = recipt.logs
-          .map(log => factory.interface.parseLog(log))
+          .map((log) => factory.interface.parseLog(log))
           .find(({ name }) => name === 'NewParty')
 
         writeAirtableData(args[0], getNetwork().chainId, data)
 
         onPartyAddressChange(args[0])
-        setProgress(progress => ({ ...progress, confirmed: true }))
+        setProgress((progress) => ({ ...progress, confirmed: true }))
         onNext()
       } catch (err) {
-        setProgress(progress => ({ ...progress, failed: true }))
+        setProgress((progress) => ({ ...progress, failed: true }))
       }
     },
     [data, factory.interface, onNext, onPartyAddressChange]
@@ -103,7 +103,7 @@ function StartParty({ title }) {
       return
     }
 
-    setProgress(progress => ({
+    setProgress((progress) => ({
       ...progress,
       errorSigning: false,
       failed: false,

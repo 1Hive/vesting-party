@@ -22,7 +22,7 @@ function useFilteredParties() {
 
   const filteredParties = useMemo(
     () =>
-      parties.filter(party => {
+      parties.filter((party) => {
         return testHostFilter(creatorFilter, party.host, account)
       }),
     [account, creatorFilter, parties]
@@ -35,7 +35,7 @@ function useFilteredParties() {
         items: ['All', 'You', 'Others'],
         filter: creatorFilter,
         onChange: useCallback(
-          index => setCreatorFilter(index || NULL_FILTER_STATE),
+          (index) => setCreatorFilter(index || NULL_FILTER_STATE),
           [setCreatorFilter]
         ),
       },

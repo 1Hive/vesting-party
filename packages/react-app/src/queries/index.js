@@ -26,6 +26,7 @@ export const Parties = gql`
         symbol
         decimals
       }
+      distributor
       merkleRoot
       upfrontPct
       vestingPeriod
